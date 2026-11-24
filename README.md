@@ -226,7 +226,7 @@ Later deploys: `cd app/firebase && firebase deploy --only firestore:rules,functi
 
 | `--dart-define` | Default | Meaning |
 |---|---|---|
-| `FLAVOR` | `dev` | Flavor on web (Android/iOS use `--flavor`) |
+| `FLAVOR` | `dev` | Flavor on web (Android/iOS use `--flavor`); `deploy_web.sh` sets it |
 | `USE_FIREBASE` | `false` | dev only: use CMS4Cas-Dev instead of the local backend (prod always uses CMS4Cas) |
 | `CASINO_ID` | `main` | Property whose data to use |
 | `APPCHECK_WEB_KEY` | — | reCAPTCHA v3 site key for App Check on web |
@@ -235,19 +235,34 @@ Later deploys: `cd app/firebase && firebase deploy --only firestore:rules,functi
 
 ## Build and deploy
 
+### Web (Firebase Hosting)
+
 ```bash
-# Web (served by Firebase Hosting from app/build/web)
-cd app && flutter build web --release --dart-define=FLAVOR=prod --dart-define=CASINO_ID=main --dart-define=APPCHECK_WEB_KEY=<site-key>
-cd firebase && firebase deploy --only hosting --project prod
-
-# Android
-cd app && flutter build appbundle --release --flavor prod --dart-define=CASINO_ID=main
-
-# iOS (dev/prod schemes and Debug/Release/Profile-<flavor> configurations are in ios/Runner.xcodeproj)
-cd app && flutter build ipa --release --flavor prod --dart-define=CASINO_ID=main
+bash app/tool/deploy_web.sh dev                    # → https://cms4cas-dev.web.app   (CMS4Cas-Dev)
+APPCHECK_WEB_KEY=<recaptcha-v3-site-key> \
+bash app/tool/deploy_web.sh prod                   # → https://cms4cas.web.app       (CMS4Cas)
+bash app/tool/deploy_web.sh prod --preview qa      # temporary preview URL (7 days), live site untouched
+bash app/tool/deploy_web.sh prod --build-only      # just build app/build/web
 ```
 
-Application ids are in `app/flavorizr.yaml`, `app/android/app/flavorizr.gradle.kts` and the iOS build configurations (`store.cms4cas.app`, dev `store.cms4cas.app.dev`). The Android namespace / Kotlin package is `store.cms4cas.app`. Set up signing before store release. For offline/air-gapped web deployments add `--no-web-resources-cdn` and bundle fonts.
+The script refuses to build with placeholder Firebase config, builds the right flavor (`FLAVOR`, `CASINO_ID`, `USE_FIREBASE` for dev), self-hosts CanvasKit (`--no-web-resources-cdn`), copies the build into `app/firebase/hosting_public/` (the Firebase CLI only deploys from inside its own folder; git-ignored) and deploys Hosting to the matching project. Needs `firebase login`.
+
+What Hosting serves (`app/firebase/firebase.json`):
+- Clean URLs (`/players/…`, `/credit/…`) rewritten to `index.html`, so links are bookmarkable; signed-out visitors return to the page they asked for after signing in.
+- Pages and scripts are revalidated on every load (`no-cache`, cheap with ETags), so a new deploy reaches users immediately — Flutter's file names don't change between builds, so longer caching would serve stale code. Fonts, wasm and images cache for a day.
+- Security headers: `X-Frame-Options: DENY`, `nosniff`, strict referrer, no camera/mic/location; `X-Robots-Tag: noindex` (also in `index.html`) keeps this internal tool out of search engines. Source maps are not uploaded.
+
+Before the first prod deploy: register the web app in **App Check** with a reCAPTCHA v3 key and pass it as `APPCHECK_WEB_KEY` (otherwise App Check is off on web). Sign-in works on `*.web.app` / `*.firebaseapp.com` out of the box; for a custom domain, add it under Hosting and in **Authentication → Settings → Authorized domains**. Browsers need to reach Google services (`*.googleapis.com`, `www.gstatic.com` for the Firebase JS SDK) — allow them on locked-down casino networks.
+
+### Android / iOS
+
+```bash
+cd app
+flutter build appbundle --release --flavor prod --dart-define=CASINO_ID=main
+flutter build ipa --release --flavor prod --dart-define=CASINO_ID=main      # on macOS with Xcode
+```
+
+Application ids are in `app/flavorizr.yaml`, `app/android/app/flavorizr.gradle.kts` and the iOS build configurations (`store.cms4cas.app`, dev `store.cms4cas.app.dev`). Set up signing before store release.
 
 ## Known gaps
 

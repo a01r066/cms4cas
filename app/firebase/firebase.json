@@ -1,12 +1,99 @@
 {
-  "firestore": { "rules": "firestore.rules" },
-  "functions": [{ "source": "functions", "runtime": "nodejs24", "ignore": ["node_modules", "scripts", "test", ".git", "*.log"] }],
-  "hosting": { "public": "../build/web", "ignore": ["firebase.json", "**/.*"], "rewrites": [{ "source": "**", "destination": "/index.html" }] },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "runtime": "nodejs24",
+      "ignore": [
+        "node_modules",
+        "scripts",
+        "test",
+        ".git",
+        "*.log"
+      ]
+    }
+  ],
+  "hosting": {
+    "public": "hosting_public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/*.map"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          },
+          {
+            "key": "Permissions-Policy",
+            "value": "camera=(), microphone=(), geolocation=(), payment=()"
+          },
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(wasm|ttf|otf|woff|woff2|png|ico)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=86400"
+          }
+        ]
+      }
+    ]
+  },
   "emulators": {
-    "auth": { "host": "127.0.0.1", "port": 9099 },
-    "firestore": { "host": "127.0.0.1", "port": 8080 },
-    "functions": { "host": "127.0.0.1", "port": 5001 },
-    "ui": { "enabled": true, "host": "127.0.0.1", "port": 4000 },
+    "auth": {
+      "host": "127.0.0.1",
+      "port": 9099
+    },
+    "firestore": {
+      "host": "127.0.0.1",
+      "port": 8080
+    },
+    "functions": {
+      "host": "127.0.0.1",
+      "port": 5001
+    },
+    "hosting": {
+      "host": "127.0.0.1",
+      "port": 5002
+    },
+    "ui": {
+      "enabled": true,
+      "host": "127.0.0.1",
+      "port": 4000
+    },
     "singleProjectMode": true
   }
 }

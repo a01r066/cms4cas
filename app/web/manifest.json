@@ -1,12 +1,12 @@
 {
-    "name": "CMS — Casino Management",
-    "short_name": "CMS",
-    "start_url": ".",
+    "name": "CMS4Cas \u2014 Casino Management",
+    "short_name": "CMS4Cas",
+    "start_url": "/",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#FFFFFF",
+    "theme_color": "#0B5D4B",
+    "description": "Casino operations management: player rating, table games, credit, currency compliance.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
@@ -31,5 +31,6 @@
             "type": "image/png",
             "purpose": "maskable"
         }
-    ]
+    ],
+    "scope": "/"
 }

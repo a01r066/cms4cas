@@ -11,8 +11,8 @@ class F {
   static bool get isProd => appFlavor == Flavor.prod;
 
   static String get title => switch (appFlavor) {
-        Flavor.dev => 'CMS (dev)',
-        Flavor.prod => 'CMS',
+        Flavor.dev => 'CMS4Cas (dev)',
+        Flavor.prod => 'CMS4Cas',
       };
 
   /// prod always uses Firebase. dev uses device storage (no backend, no passwords)
