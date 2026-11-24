@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/backend/functions_gateway.dart';
 import '../../../../core/storage/prefs_service.dart';
 import '../../../../core/storage/record_store.dart';
+import '../models/access_request_model.dart';
 import '../models/app_user_model.dart';
 
 /// Sign-in and operator profiles. Two implementations because authentication
@@ -20,6 +21,19 @@ abstract class AuthRemoteDataSource {
   Future<void> signInAs(String userId);
   Future<void> signOut();
 
+  /// Firebase only: creates the Auth account (signed in afterwards), sets the
+  /// display name, sends a verification email and files an access request.
+  Future<String> register({required String name, required String email, required String password});
+  Future<void> sendPasswordReset(String email);
+
+  /// The signed-in account's email is verified (always true on the local backend).
+  bool get emailVerified;
+  Future<void> resendVerificationEmail();
+
+  /// Pending registrations — readable by admins only.
+  Stream<List<AccessRequestModel>> watchAccessRequests();
+  Future<void> dismissAccessRequest(String uid);
+
   Stream<AppUserModel?> watchProfile(String uid);
   Stream<List<AppUserModel>> watchUsers();
 
@@ -28,6 +42,7 @@ abstract class AuthRemoteDataSource {
 }
 
 const _users = 'users';
+const _requests = 'access_requests';
 
 abstract class _ProfilesFromStore implements AuthRemoteDataSource {
   RecordStore get store;
@@ -39,6 +54,13 @@ abstract class _ProfilesFromStore implements AuthRemoteDataSource {
 
   @override
   Stream<List<AppUserModel>> watchUsers() => store.watch(_users).map((l) => l.map(AppUserModel.fromJson).toList());
+
+  @override
+  Stream<List<AccessRequestModel>> watchAccessRequests() =>
+      store.watch(_requests).map((l) => l.map(AccessRequestModel.fromJson).toList());
+
+  @override
+  Future<void> dismissAccessRequest(String uid) => store.delete(_requests, uid);
 
   @override
   Future<String> setUserRole({String? uid, String? email, required String name, required String role, String? creditRole}) async {
@@ -78,6 +100,30 @@ class FirebaseAuthRemoteDataSource extends _ProfilesFromStore {
 
   @override
   Future<void> signOut() => _auth.signOut();
+
+  @override
+  Future<String> register({required String name, required String email, required String password}) async {
+    final cred = await _auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
+    final user = cred.user!;
+    await user.updateDisplayName(name.trim());
+    try {
+      await user.sendEmailVerification();
+    } catch (_) {
+      // Verification mail is a convenience; the account and request still stand.
+    }
+    final req = AccessRequestModel(id: user.uid, uid: user.uid, name: name.trim(), email: user.email ?? email.trim(), requestedAt: DateTime.now());
+    await store.put(_requests, user.uid, req.toJson());
+    return user.uid;
+  }
+
+  @override
+  Future<void> sendPasswordReset(String email) => _auth.sendPasswordResetEmail(email: email.trim());
+
+  @override
+  bool get emailVerified => _auth.currentUser?.emailVerified ?? false;
+
+  @override
+  Future<void> resendVerificationEmail() async => _auth.currentUser?.sendEmailVerification();
 }
 
 class LocalAuthRemoteDataSource extends _ProfilesFromStore {
@@ -115,4 +161,18 @@ class LocalAuthRemoteDataSource extends _ProfilesFromStore {
     await _prefs.setSessionUserId(null);
     _changes.add(null);
   }
+
+  @override
+  Future<String> register({required String name, required String email, required String password}) =>
+      throw UnsupportedError('Registration needs the Firebase backend. On this device, an administrator adds users in Settings.');
+
+  @override
+  Future<void> sendPasswordReset(String email) =>
+      throw UnsupportedError('The local backend has no passwords.');
+
+  @override
+  bool get emailVerified => true;
+
+  @override
+  Future<void> resendVerificationEmail() async {}
 }

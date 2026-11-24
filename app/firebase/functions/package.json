@@ -1,0 +1,17 @@
+{
+  "name": "cms-functions",
+  "private": true,
+  "main": "src/index.js",
+  "engines": {
+    "node": "24"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.10.0",
+    "firebase-functions": "^7.4.0"
+  },
+  "scripts": {
+    "test": "node --no-experimental-require-module --test test/*.test.js",
+    "create:admin": "node scripts/create-user.js --role admin",
+    "create:user": "node scripts/create-user.js"
+  }
+}

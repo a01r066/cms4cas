@@ -8,12 +8,12 @@ android.apply {
     productFlavors {
         create("dev") {
             dimension = "flavor-type"
-            applicationId = "com.cmskiss.cms_kiss.dev"
+            applicationId = "store.cms4cas.app.dev"
             resValue(type = "string", name = "app_name", value = "CMS Dev")
         }
         create("prod") {
             dimension = "flavor-type"
-            applicationId = "com.cmskiss.cms_kiss"
+            applicationId = "store.cms4cas.app"
             resValue(type = "string", name = "app_name", value = "CMS")
         }
     }

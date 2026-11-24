@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "cms4cas-dev",
+    "dev": "cms4cas-dev",
+    "prod": "cms4cas"
+  }
+}

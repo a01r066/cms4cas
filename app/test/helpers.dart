@@ -9,12 +9,12 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Local backend with the real action handlers — the same wiring as bootstrap.
-Future<List<Override>> localOverrides([Map<String, Object> prefs = const {}]) async {
+Future<List<Override>> localOverrides([Map<String, Object> prefs = const {}, Backend backend = Backend.local]) async {
   SharedPreferences.setMockInitialValues(prefs);
   final p = await SharedPreferences.getInstance();
   return [
     prefsProvider.overrideWithValue(p),
-    backendProvider.overrideWithValue(Backend.local),
+    backendProvider.overrideWithValue(backend),
     localFunctionHandlersProvider.overrideWithValue(localFunctionHandlers()),
   ];
 }

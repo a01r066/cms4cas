@@ -1,17 +1,13 @@
-# cms_kiss
+# CMS app (Flutter)
 
-A new Flutter project.
+The Flutter client for **CMS — Casino Management**. Setup, Firebase, flavors, build and deploy instructions are in the [repository README](../README.md); architecture in [docs/03_architecture.md](../docs/03_architecture.md).
 
-## Getting Started
+```bash
+flutter pub get
+flutter run -d chrome                  # dev flavor, local backend
+flutter run --flavor dev               # Android / iOS
+dart run build_runner build -d         # after changing freezed / json models
+flutter test                           # 21 tests
+```
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Layout: `lib/features/<feature>/{data,domain,presentation}` — datasource → repository (`Either`) → `StateNotifier`; freezed models and entities; privileged writes through `FunctionsGateway`.

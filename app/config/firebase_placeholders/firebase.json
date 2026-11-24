@@ -1,0 +1,84 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "buildConfigurations": {
+          "android/app/src/dev": {
+            "projectId": "placeholder-dev",
+            "appId": "1:000000000000:android:0000000000000000000000",
+            "fileOutput": "android/app/src/dev/google-services.json"
+          },
+          "android/app/src/prod": {
+            "projectId": "placeholder-prod",
+            "appId": "1:000000000000:android:0000000000000000000000",
+            "fileOutput": "android/app/src/prod/google-services.json"
+          }
+        }
+      },
+      "ios": {
+        "buildConfigurations": {
+          "Debug": {
+            "projectId": "placeholder-prod",
+            "appId": "1:000000000000:ios:0000000000000000000000",
+            "uploadDebugSymbols": true,
+            "fileOutput": "ios/config/prod/GoogleService-Info.plist"
+          },
+          "Debug-dev": {
+            "projectId": "placeholder-dev",
+            "appId": "1:000000000000:ios:0000000000000000000000",
+            "uploadDebugSymbols": true,
+            "fileOutput": "ios/config/dev/GoogleService-Info.plist"
+          },
+          "Release-dev": {
+            "projectId": "placeholder-dev",
+            "appId": "1:000000000000:ios:0000000000000000000000",
+            "uploadDebugSymbols": true,
+            "fileOutput": "ios/config/dev/GoogleService-Info.plist"
+          },
+          "Profile-dev": {
+            "projectId": "placeholder-dev",
+            "appId": "1:000000000000:ios:0000000000000000000000",
+            "uploadDebugSymbols": true,
+            "fileOutput": "ios/config/dev/GoogleService-Info.plist"
+          },
+          "Debug-prod": {
+            "projectId": "placeholder-prod",
+            "appId": "1:000000000000:ios:0000000000000000000000",
+            "uploadDebugSymbols": true,
+            "fileOutput": "ios/config/prod/GoogleService-Info.plist"
+          },
+          "Release-prod": {
+            "projectId": "placeholder-prod",
+            "appId": "1:000000000000:ios:0000000000000000000000",
+            "uploadDebugSymbols": true,
+            "fileOutput": "ios/config/prod/GoogleService-Info.plist"
+          },
+          "Profile-prod": {
+            "projectId": "placeholder-prod",
+            "appId": "1:000000000000:ios:0000000000000000000000",
+            "uploadDebugSymbols": true,
+            "fileOutput": "ios/config/prod/GoogleService-Info.plist"
+          }
+        }
+      },
+      "dart": {
+        "lib/firebase_options_dev.dart": {
+          "projectId": "placeholder-dev",
+          "configurations": {
+            "android": "1:000000000000:android:0000000000000000000000",
+            "ios": "1:000000000000:ios:0000000000000000000000",
+            "web": "1:000000000000:web:0000000000000000000000"
+          }
+        },
+        "lib/firebase_options_prod.dart": {
+          "projectId": "placeholder-prod",
+          "configurations": {
+            "android": "1:000000000000:android:0000000000000000000000",
+            "ios": "1:000000000000:ios:0000000000000000000000",
+            "web": "1:000000000000:web:0000000000000000000000"
+          }
+        }
+      }
+    }
+  }
+}

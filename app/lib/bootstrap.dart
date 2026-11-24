@@ -75,9 +75,15 @@ Future<void> _activateAppCheck() async {
     debugPrint('App Check not activated on web: pass --dart-define=APPCHECK_WEB_KEY=<reCAPTCHA v3 site key>.');
     return;
   }
+  // Real attestation (Play Integrity, App Attest/DeviceCheck) only in prod *release* builds:
+  // it does not work on simulators/emulators or in debug builds. Everything else uses the
+  // debug provider, optionally with a fixed token (--dart-define=APPCHECK_DEBUG_TOKEN=<uuid>)
+  // registered once per project in Firebase console → App Check → Apps → Manage debug tokens.
+  final attest = F.isProd && kReleaseMode;
+  final debugToken = F.appCheckDebugToken.isEmpty ? null : F.appCheckDebugToken;
   await FirebaseAppCheck.instance.activate(
     providerWeb: kIsWeb ? ReCaptchaV3Provider(F.appCheckWebKey) : null,
-    providerAndroid: F.isProd ? const AndroidPlayIntegrityProvider() : const AndroidDebugProvider(),
-    providerApple: F.isProd ? const AppleAppAttestWithDeviceCheckFallbackProvider() : const AppleDebugProvider(),
+    providerAndroid: attest ? const AndroidPlayIntegrityProvider() : AndroidDebugProvider(debugToken: debugToken),
+    providerApple: attest ? const AppleAppAttestWithDeviceCheckFallbackProvider() : AppleDebugProvider(debugToken: debugToken),
   );
 }

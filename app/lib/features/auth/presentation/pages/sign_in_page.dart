@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/routing/route_names.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../../../../flavors.dart';
@@ -89,34 +92,74 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     final state = ref.watch(authNotifierProvider);
     final uid = ref.watch(authUidProvider).value;
     final profile = ref.watch(currentUserProvider);
-    final signedInWithoutRole = uid != null && profile.hasValue && profile.value == null;
+    final waiting = uid != null && profile.hasValue && profile.value == null;
+    if (waiting) return _waitingForRole(state.busy);
     return [
-      if (!signedInWithoutRole) ...[
-        TextField(
-          controller: email,
-          keyboardType: TextInputType.emailAddress,
-          autofillHints: const [AutofillHints.email],
-          decoration: const InputDecoration(labelText: 'Email'),
-        ),
-        TextField(
-          controller: password,
-          obscureText: true,
-          autofillHints: const [AutofillHints.password],
-          decoration: const InputDecoration(labelText: 'Password'),
-          onSubmitted: (_) => _signIn(),
-        ),
-      ],
-      if (state.failure != null) Padding(padding: const EdgeInsets.only(top: 8), child: Callout.bad(state.failure!.displayMessage)),
-      if (signedInWithoutRole) ...[
-        const Callout('Signed in, but no CMS role is assigned to this account yet. Ask an administrator — '
-            'or, if this is a new casino, set yourself up as the first administrator.'),
-        TextButton(onPressed: () => showUserForm(context, ref, firstAdmin: true), child: const Text('Set up as first administrator')),
-        TextButton(onPressed: () => ref.read(authNotifierProvider.notifier).signOut(), child: const Text('Use another account')),
-      ],
-      const SizedBox(height: 16),
-      if (!signedInWithoutRole)
-        FilledButton(onPressed: state.busy ? null : _signIn, child: const Text('Sign in')),
+      AutofillGroup(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          TextField(
+            controller: email,
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+            decoration: const InputDecoration(labelText: 'Email'),
+          ),
+          TextField(
+            controller: password,
+            obscureText: true,
+            autofillHints: const [AutofillHints.password],
+            decoration: const InputDecoration(labelText: 'Password'),
+            onSubmitted: (_) => _signIn(),
+          ),
+        ]),
+      ),
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton(onPressed: state.busy ? null : _forgotPassword, child: const Text('Forgot password?')),
+      ),
+      if (state.failure != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Callout.bad(state.failure!.displayMessage)),
+      FilledButton(onPressed: state.busy ? null : _signIn, child: const Text('Sign in')),
+      const SizedBox(height: 8),
+      Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, children: [
+        const Text('New here?'),
+        TextButton(onPressed: () => context.go(Routes.register), child: const Text('Create an account')),
+      ]),
     ];
+  }
+
+  /// Signed in, but no CMS role yet (just registered, or not approved).
+  List<Widget> _waitingForRole(bool busy) {
+    final n = ref.read(authNotifierProvider.notifier);
+    final verified = ref.read(authRepositoryProvider).emailVerified;
+    return [
+      const Callout('Your account is waiting for an administrator to assign a role. '
+          'You will see the casino modules as soon as that is done — no need to sign in again.'),
+      const SizedBox(height: 8),
+      if (!verified) ...[
+        Callout.warn('Please confirm your email address — we sent you a link.'),
+        TextButton(
+          onPressed: busy
+              ? null
+              : () async {
+                  final r = await n.resendVerificationEmail();
+                  if (mounted) r.fold((f) => showMsg(context, f.displayMessage, error: true), (_) => showMsg(context, 'Verification email sent'));
+                },
+          child: const Text('Resend verification email'),
+        ),
+      ],
+      const Divider(),
+      const Text('Setting up a new casino? The very first account may make itself the administrator.', style: TextStyle(fontSize: 12)),
+      TextButton(onPressed: () => showUserForm(context, ref, firstAdmin: true), child: const Text('Set up as first administrator')),
+      OutlinedButton(onPressed: busy ? null : n.signOut, child: const Text('Sign out')),
+    ];
+  }
+
+  Future<void> _forgotPassword() async {
+    final r = await ref.read(authNotifierProvider.notifier).sendPasswordReset(email.text);
+    if (!mounted) return;
+    r.fold(
+      (f) => showMsg(context, f.displayMessage, error: true),
+      (_) => showMsg(context, 'If an account exists for ${email.text.trim()}, a reset link is on its way.'),
+    );
   }
 
   Future<void> _signIn() => ref.read(authNotifierProvider.notifier).signInWithEmail(email.text, password.text);

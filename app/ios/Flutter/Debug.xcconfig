@@ -1,1 +1,5 @@
 #include "Generated.xcconfig"
+
+// Defaults for the plain Runner scheme; flavor schemes (dev/prod) override these.
+BUNDLE_NAME=CMS
+BUNDLE_DISPLAY_NAME=CMS

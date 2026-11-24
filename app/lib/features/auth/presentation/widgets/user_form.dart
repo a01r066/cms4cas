@@ -4,16 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../../../../shared/providers/backend_providers.dart';
+import '../../domain/entities/access_request.dart';
 import '../../domain/entities/app_role.dart';
 import '../../domain/entities/app_user.dart';
 import '../providers/auth_notifier.dart';
 
-/// Add or edit an operator. Saving goes through the `setUserRole` action.
+/// Add or edit an operator, or give a registrant ([request]) a role. Saving goes
+/// through the `setUserRole` action.
 /// [firstAdmin]: the very first user of an empty casino sets themself up as admin.
-Future<void> showUserForm(BuildContext context, WidgetRef ref, {AppUser? existing, bool firstAdmin = false}) async {
+Future<void> showUserForm(BuildContext context, WidgetRef ref, {AppUser? existing, AccessRequest? request, bool firstAdmin = false}) async {
   final cloud = ref.read(backendProvider) == Backend.firebase;
-  final name = TextEditingController(text: existing?.name);
-  final email = TextEditingController(text: existing?.email);
+  final name = TextEditingController(text: existing?.name ?? request?.name);
+  final email = TextEditingController(text: existing?.email ?? request?.email);
   var role = existing?.role ?? (firstAdmin ? AppRole.admin : AppRole.pitSupervisor);
   CreditRole? credit = existing?.creditRole;
   final form = GlobalKey<FormState>();
@@ -22,7 +24,13 @@ Future<void> showUserForm(BuildContext context, WidgetRef ref, {AppUser? existin
     barrierDismissible: !firstAdmin,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, set) => AlertDialog(
-        title: Text(firstAdmin ? 'Create the first administrator' : existing == null ? 'Add user' : 'Edit user'),
+        title: Text(firstAdmin
+            ? 'Create the first administrator'
+            : request != null
+                ? 'Assign a role to ${request.name}'
+                : existing == null
+                    ? 'Add user'
+                    : 'Edit user'),
         content: SizedBox(
           width: 420,
           child: Form(
@@ -37,7 +45,7 @@ Future<void> showUserForm(BuildContext context, WidgetRef ref, {AppUser? existin
               if (cloud && !firstAdmin)
                 TextFormField(
                   controller: email,
-                  enabled: existing == null,
+                  enabled: existing == null && request == null,
                   decoration: const InputDecoration(
                       labelText: 'Sign-in email *', helperText: 'The account must already exist in Firebase Authentication'),
                   validator: (v) => existing == null && !(v ?? '').contains('@') ? 'Enter the user\'s email' : null,
@@ -69,7 +77,7 @@ Future<void> showUserForm(BuildContext context, WidgetRef ref, {AppUser? existin
             onPressed: () async {
               if (!form.currentState!.validate()) return;
               final draft = AppUser(
-                id: existing?.id ?? '',
+                id: existing?.id ?? request?.uid ?? '',
                 name: name.text.trim(),
                 role: role,
                 creditRole: credit,

@@ -20,7 +20,11 @@ Future<Map<String, dynamic>> _setUserRole(LocalCall c) async {
   if (users.isEmpty) {
     if (role != AppRole.admin.wire) c.fail('failed-precondition', 'The first user must be an administrator.');
   } else {
-    await c.member(roles: {AppRole.admin.wire});
+    if (c.uid == null) c.fail('unauthenticated', 'Sign in first.');
+    final caller = await c.store.get('users', c.uid!);
+    if (caller == null || caller['role'] != AppRole.admin.wire) {
+      c.fail('permission-denied', 'Only an administrator can assign roles.');
+    }
   }
   final uid = c.str('uid', required: false).isNotEmpty ? c.str('uid') : newId();
   await c.store.put('users', uid, {
@@ -30,5 +34,7 @@ Future<Map<String, dynamic>> _setUserRole(LocalCall c) async {
     'creditRole': creditRole,
     'email': c.data['email'],
   });
+  // A registrant who now has a role is no longer waiting.
+  if (await c.store.get('access_requests', uid) != null) await c.store.delete('access_requests', uid);
   return {'ok': true, 'uid': uid};
 }

@@ -2,6 +2,8 @@ import 'package:casino_engine/casino_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../auth/domain/entities/access_request.dart';
+import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/widgets/user_form.dart';
 import '../../../../core/util/fmt.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -204,11 +206,33 @@ class _UsersCard extends ConsumerWidget {
     final me = ref.watch(currentUserValueProvider);
     final users = ref.watch(usersProvider).value ?? const <AppUser>[];
     final canManage = me?.can(Perm.manageUsers) == true;
+    final requests = ref.watch(accessRequestsProvider).value ?? const <AccessRequest>[];
     return SectionCard(
       title: 'Users and roles',
       subtitle: 'Credit signing authority follows Table 6.2',
       trailing: canManage ? FilledButton.tonalIcon(onPressed: () => showUserForm(context, ref), icon: const Icon(Icons.person_add_alt), label: const Text('Add user')) : null,
       children: [
+        if (canManage && requests.isNotEmpty) ...[
+          Text('Waiting for a role (${requests.length})', style: Theme.of(context).textTheme.titleSmall),
+          for (final r in requests)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.hourglass_top_outlined),
+              title: Text(r.name),
+              subtitle: Text('${r.email} · registered ${dateTime(r.requestedAt)}'),
+              trailing: Wrap(spacing: 4, children: [
+                TextButton(
+                  onPressed: () async {
+                    final res = await ref.read(authNotifierProvider.notifier).dismissRequest(r);
+                    if (context.mounted) res.fold((f) => showMsg(context, f.displayMessage, error: true), (_) => showMsg(context, 'Request dismissed'));
+                  },
+                  child: const Text('Dismiss'),
+                ),
+                FilledButton.tonal(onPressed: () => showUserForm(context, ref, request: r), child: const Text('Assign role')),
+              ]),
+            ),
+          const Divider(),
+        ],
         for (final u in users)
           ListTile(
             contentPadding: EdgeInsets.zero,

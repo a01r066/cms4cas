@@ -227,8 +227,12 @@ class EmptyState extends StatelessWidget {
       );
 }
 
+/// Shows [msg] now, replacing any message still on screen (messages never queue,
+/// so an error is not hidden behind an earlier confirmation).
 void showMsg(BuildContext context, String msg, {bool error = false}) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(
     content: Text(msg),
     backgroundColor: error ? Colors.red.shade700 : null,
   ));

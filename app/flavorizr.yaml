@@ -1,20 +1,25 @@
-# Native dev/prod flavors. Run on macOS (iOS steps need Xcode + the xcodeproj gem):
+# Native dev/prod flavors (already applied to android/ and ios/). To re-apply after changing ids:
 #   dart run flutter_flavorizr -p android:buildGradle,android:androidManifest,ios:xcconfig,ios:buildTargets,ios:schema,ios:plist
+# (iOS processors need Ruby with the xcodeproj gem.)
+#   dev  → store.cms4cas.app.dev  → Firebase project CMS4Cas-Dev
+#   prod → store.cms4cas.app      → Firebase project CMS4Cas
 # The flutter:* processors are deliberately not used — they would overwrite lib/main.dart and app.dart.
-# Firebase config is Dart-side (lib/firebase_options_<flavor>.dart): no google-services.json /
-# GoogleService-Info.plist is bundled, so a dev build can never talk to production.
+# Firebase options are Dart-side (lib/firebase_options_<flavor>.dart, from app/tool/firebase_setup.sh).
+# Service files are per flavor: android/app/src/<flavor>/google-services.json and
+# ios/config/<flavor>/GoogleService-Info.plist (bound to that flavor's build configurations only),
+# so a dev build can never talk to production.
 flavors:
   dev:
     app:
       name: "CMS Dev"
     android:
-      applicationId: "com.cmskiss.cms_kiss.dev"
+      applicationId: "store.cms4cas.app.dev"
     ios:
-      bundleId: "com.cmskiss.cmsKiss.dev"
+      bundleId: "store.cms4cas.app.dev"
   prod:
     app:
       name: "CMS"
     android:
-      applicationId: "com.cmskiss.cms_kiss"
+      applicationId: "store.cms4cas.app"
     ios:
-      bundleId: "com.cmskiss.cmsKiss"
+      bundleId: "store.cms4cas.app"

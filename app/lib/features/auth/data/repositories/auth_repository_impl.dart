@@ -3,6 +3,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failure_mapper.dart';
 import '../../../../core/typedefs/typedefs.dart';
 import '../../../../core/util/streams.dart';
+import '../../domain/entities/access_request.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -35,6 +36,33 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   ResultVoid signOut() => _guard(_ds.signOut);
+
+  @override
+  ResultFuture<String> register({required String name, required String email, required String password}) async {
+    try {
+      return Right(await _ds.register(name: name, email: email, password: password));
+    } catch (e, st) {
+      return Left(mapToFailure(e, st));
+    }
+  }
+
+  @override
+  ResultVoid sendPasswordReset(String email) => _guard(() => _ds.sendPasswordReset(email));
+
+  @override
+  bool get emailVerified => _ds.emailVerified;
+
+  @override
+  ResultVoid resendVerificationEmail() => _guard(_ds.resendVerificationEmail);
+
+  @override
+  Stream<List<AccessRequest>> watchAccessRequests() => _ds
+      .watchAccessRequests()
+      .map((l) => l.map((m) => m.toEntity()).toList()..sort((a, b) => a.requestedAt.compareTo(b.requestedAt)))
+      .mapErrorsToFailure();
+
+  @override
+  ResultVoid dismissAccessRequest(String uid) => _guard(() => _ds.dismissAccessRequest(uid));
 
   @override
   ResultFuture<AppUser> saveUser(AppUser user) async {

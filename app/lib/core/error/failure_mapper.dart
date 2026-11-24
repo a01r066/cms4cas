@@ -20,10 +20,17 @@ Failure mapToFailure(Object e, [StackTrace? st]) {
     if (userFacing.contains(e.code) && (e.message ?? '').isNotEmpty) return Failure(e.message!, code: e.code, cause: e);
     return _byCode(e.code, e);
   }
+  if (e is UnsupportedError) return Failure(e.message ?? 'Not available here.', code: 'unsupported', cause: e);
   if (e is FirebaseAuthException) {
     return switch (e.code) {
-      'invalid-credential' || 'wrong-password' || 'user-not-found' || 'invalid-email' =>
+      'invalid-credential' || 'wrong-password' || 'user-not-found' =>
         Failure('Email or password is incorrect.', code: e.code, cause: e),
+      'invalid-email' => Failure('Enter a valid email address.', code: e.code, cause: e),
+      'email-already-in-use' =>
+        Failure('An account already exists for this email. Sign in, or reset the password.', code: e.code, cause: e),
+      'weak-password' => Failure('Choose a stronger password (at least 8 characters).', code: e.code, cause: e),
+      'operation-not-allowed' =>
+        Failure('Email/password sign-in is not enabled for this Firebase project.', code: e.code, cause: e),
       'user-disabled' => Failure('This account has been disabled. Contact an administrator.', code: e.code, cause: e),
       'too-many-requests' => Failure('Too many attempts. Wait a few minutes and try again.', code: e.code, cause: e),
       'network-request-failed' => Failure('No connection. Check the network and try again.', code: e.code, cause: e),

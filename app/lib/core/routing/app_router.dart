@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/sign_in_page.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/compliance/presentation/pages/compliance_pages.dart';
@@ -24,8 +25,8 @@ class _RouterRefresh extends ChangeNotifier {
 }
 
 /// Internal staff tool: unlike a consumer app there is no guest browsing, so
-/// every path except sign-in requires an operator with a CMS role.
-bool _requiresAuth(String loc) => loc != Routes.signIn;
+/// every path except sign-in and registration requires an operator with a CMS role.
+bool _requiresAuth(String loc) => loc != Routes.signIn && loc != Routes.register;
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _RouterRefresh();
@@ -47,11 +48,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (!_requiresAuth(loc)) return null;
         return Uri(path: Routes.signIn, queryParameters: loc == Routes.home ? null : {'from': state.uri.toString()}).toString();
       }
-      if (loc == Routes.signIn) return state.uri.queryParameters['from'] ?? Routes.home;
+      if (!_requiresAuth(loc)) return state.uri.queryParameters['from'] ?? Routes.home;
       return null;
     },
     routes: [
       GoRoute(path: Routes.signIn, builder: (_, _) => const SignInPage()),
+      GoRoute(path: Routes.register, builder: (_, _) => const RegisterPage()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => ShellScaffold(navigationShell: shell),
         branches: [

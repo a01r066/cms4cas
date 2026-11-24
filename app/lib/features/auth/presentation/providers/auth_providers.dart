@@ -5,6 +5,8 @@ import '../../../../shared/providers/firebase_providers.dart';
 import '../../../../shared/providers/prefs_provider.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import '../../domain/entities/access_request.dart';
+import '../../domain/entities/app_role.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -40,4 +42,11 @@ final usersProvider = StreamProvider<List<AppUser>>((ref) {
 final localSignInUsersProvider = StreamProvider<List<AppUser>>((ref) {
   if (ref.watch(backendProvider) != Backend.local) return Stream.value(const []);
   return ref.watch(authRepositoryProvider).watchUsers();
+});
+
+/// Registrations waiting for a role — only administrators see them.
+final accessRequestsProvider = StreamProvider<List<AccessRequest>>((ref) {
+  final me = ref.watch(currentUserValueProvider);
+  if (me == null || !me.can(Perm.manageUsers)) return Stream.value(const []);
+  return ref.watch(authRepositoryProvider).watchAccessRequests();
 });

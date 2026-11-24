@@ -1,7 +1,75 @@
-**/.dart_tool/
+# CMS4Cas — files that must never reach GitHub.
+# Flutter's own app/.gitignore, app/ios/.gitignore and app/android/.gitignore cover the
+# generated platform files (Generated.xcconfig, local.properties, Pods, ephemeral/…).
+
+# ── Secrets & credentials ──────────────────────────────────────────────
+# Service-account keys (used by app/tool/create_admin.sh / create_user.sh --service-account)
+*firebase-adminsdk*.json
+*service-account*.json
+*service_account*.json
+*serviceAccount*.json
+**/gcloud-credentials*.json
+# Cloud Functions secrets / runtime config
+**/functions/.runtimeconfig.json
+**/.secret.local
+# Environment files (App Check debug token, API keys…)
+.env
+.env.*
+!.env.example
+# Android signing
+**/android/key.properties
+**/android/local.properties
+*.jks
+*.keystore
+# Apple signing & push keys
+*.p12
+*.p8
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+# Fastlane / CI secrets
+**/fastlane/.env*
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots/
+**/fastlane/test_output/
+
+# Firebase app config with API keys (generated per machine by app/tool/firebase_setup.sh).
+# Placeholders live in app/config/firebase_placeholders/ — install them with
+# app/tool/use_placeholder_firebase_config.sh on a clone without Firebase access.
+app/lib/firebase_options_*.dart
+app/android/app/src/*/google-services.json
+app/ios/config/*/GoogleService-Info.plist
+app/ios/Runner/GoogleService-Info.plist
+app/android/app/google-services.json
+app/firebase.json
+
+# ── Copyrighted source material ────────────────────────────────────────
+# The book itself must not be published; the repo keeps only notes with page refs.
+*.pdf
+
+# ── Build output & dependencies ────────────────────────────────────────
 **/build/
+**/.dart_tool/
 **/.flutter-plugins*
-**/node_modules/
-**/.firebase/
+**/.packages
 **/pubspec_overrides.yaml
+**/coverage/
+**/node_modules/
+**/.fvm/flutter_sdk
+
+# ── Firebase CLI & emulators ───────────────────────────────────────────
+**/.firebase/
+**/*-debug.log
+**/emulator-data/
+**/firebase-export-*/
+**/functions/lib/
+
+# ── IDE / OS ───────────────────────────────────────────────────────────
 .DS_Store
+.idea/
+*.iml
+*.swp
+*.log
+.vscode/settings.json

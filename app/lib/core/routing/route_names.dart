@@ -1,6 +1,7 @@
 /// Every path in one place, so links are never typed by hand.
 abstract final class Routes {
   static const signIn = '/sign-in';
+  static const register = '/register';
   static const home = '/';
   static const players = '/players';
   static String player(String id) => '/players/$id';
