@@ -30,43 +30,51 @@ docs/                     PRD, journeys, architecture, data model, UI/UX, testin
 - Flutter **3.50+** (Dart 3.14) — `flutter --version`
 - For cloud mode: a Firebase project, Firebase CLI (`npm i -g firebase-tools`), FlutterFire CLI (`dart pub global activate flutterfire_cli`), Node 20 for Functions
 
-## Run locally (no backend)
+## Run locally (dev flavor, no backend)
 
 ```bash
 cd app
 flutter pub get
-flutter run -d chrome          # or an Android/iOS device or emulator
+dart run build_runner build -d     # freezed / json_serializable code (generated files are committed too)
+flutter run -d chrome              # web: dev flavor by default
+flutter run --flavor dev           # Android / iOS
 ```
 
-Data is stored on the device (browser localStorage on web). On first launch create the administrator. **Local mode has no passwords** — use it for evaluation and training only.
+Data is stored on the device (browser localStorage on web). On first launch create the administrator. **The dev flavor's local backend has no passwords** — use it for evaluation and training only. Privileged actions (roles, credit decisions, markers, CTR sign-off) run through the same checks as the Cloud Functions.
+
+The code follows the `flutter-riverpod-firebase-architecture` conventions — see [03 Architecture](docs/03_architecture.md).
 
 ## Tests
 
 ```bash
 cd packages/casino_engine && dart pub get && dart test    # 65 engine tests
-cd ../../app && flutter test                               # 11 app tests
+cd ../../app && flutter test                               # 21 app tests (models, domain, notifiers, widgets)
+(cd ../firebase/functions && npm test)                     # JS port of the signature rules
 python3 ../kb/book_formulas.py                             # 45 book examples (independent check)
 ```
 
 ## Cloud mode (Firebase)
 
 1. Create a Firebase project; enable **Authentication → Email/Password** and **Firestore**.
-2. Configure the app:
+2. Configure the app — one Firebase project per flavor:
    ```bash
    cd app
-   flutterfire configure            # overwrites lib/firebase_options.dart
+   flutterfire configure --project=<dev-project>  --out=lib/firebase_options_dev.dart  --no-apply-gradle-plugins
+   flutterfire configure --project=<prod-project> --out=lib/firebase_options_prod.dart --no-apply-gradle-plugins
    ```
+   Do not add `google-services.json` or `GoogleService-Info.plist` — options are Dart-side so a dev build can't reach production.
 3. Deploy rules and the role function:
    ```bash
    cd ../firebase/functions && npm install && cd ..
    firebase use <project-id>
-   firebase deploy --only firestore:rules,functions
+   firebase deploy --only firestore:rules,functions   # repeat with `firebase use` for each project
    ```
 4. Create the first user in **Firebase Console → Authentication** (or sign-up flow of your choice).
 5. Run against Firebase:
    ```bash
    cd ../app
-   flutter run -d chrome --dart-define=USE_FIREBASE=true --dart-define=CASINO_ID=main
+   flutter run --flavor dev --dart-define=USE_FIREBASE=true --dart-define=CASINO_ID=main   # dev project
+   flutter run --flavor prod --dart-define=CASINO_ID=main                                  # prod always uses Firebase
    ```
    Sign in, then choose **Set up as first administrator**. The `setUserRole` function allows this only while the casino has no users.
 6. Add other users: create their accounts in Authentication, then **Settings → Users & roles** with their email.
@@ -78,18 +86,19 @@ Before going live, test the rules with the emulator: `firebase emulators:start -
 ## Build and deploy
 
 ```bash
-# Web (served by Firebase Hosting from app/build/web)
-cd app && flutter build web --release --dart-define=USE_FIREBASE=true --dart-define=CASINO_ID=main
+# Web (served by Firebase Hosting from app/build/web); App Check needs a reCAPTCHA v3 key
+cd app && flutter build web --release --dart-define=FLAVOR=prod --dart-define=CASINO_ID=main --dart-define=APPCHECK_WEB_KEY=<site-key>
 cd ../firebase && firebase deploy --only hosting
 
 # Android
-cd app && flutter build appbundle --release --dart-define=USE_FIREBASE=true --dart-define=CASINO_ID=main
+cd app && flutter build appbundle --release --flavor prod --dart-define=CASINO_ID=main
 
-# iOS (on macOS with Xcode)
-cd app && flutter build ipa --release --dart-define=USE_FIREBASE=true --dart-define=CASINO_ID=main
+# iOS (on macOS with Xcode) — create the dev/prod schemes once first:
+#   dart run flutter_flavorizr -p ios:xcconfig,ios:buildTargets,ios:schema,ios:plist
+cd app && flutter build ipa --release --flavor prod --dart-define=CASINO_ID=main
 ```
 
-Set your own application id / bundle id (`com.cmskiss.cms_kiss` by default) and signing before store release. For offline/air-gapped web deployments add `--no-web-resources-cdn` and bundle fonts.
+Set your own application ids in `flavorizr.yaml` / `android/app/flavorizr.gradle.kts` (`com.cmskiss.cms_kiss` and `.dev` by default) and signing before store release. For offline/air-gapped web deployments add `--no-web-resources-cdn` and bundle fonts.
 
 ## Jurisdiction
 

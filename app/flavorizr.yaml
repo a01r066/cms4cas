@@ -1,0 +1,20 @@
+# Native dev/prod flavors. Run on macOS (iOS steps need Xcode + the xcodeproj gem):
+#   dart run flutter_flavorizr -p android:buildGradle,android:androidManifest,ios:xcconfig,ios:buildTargets,ios:schema,ios:plist
+# The flutter:* processors are deliberately not used — they would overwrite lib/main.dart and app.dart.
+# Firebase config is Dart-side (lib/firebase_options_<flavor>.dart): no google-services.json /
+# GoogleService-Info.plist is bundled, so a dev build can never talk to production.
+flavors:
+  dev:
+    app:
+      name: "CMS Dev"
+    android:
+      applicationId: "com.cmskiss.cms_kiss.dev"
+    ios:
+      bundleId: "com.cmskiss.cmsKiss.dev"
+  prod:
+    app:
+      name: "CMS"
+    android:
+      applicationId: "com.cmskiss.cms_kiss"
+    ios:
+      bundleId: "com.cmskiss.cmsKiss"

@@ -1,12 +1,13 @@
 # 06 · Testing report
 
-Run on 2026-11-24 with Flutter 3.50.1 / Dart 3.14.
+Run on 2026-11-24 with Flutter 3.50.1 / Dart 3.14, after restructuring the app to the `flutter-riverpod-firebase-architecture` conventions.
 
 | Suite | Command | Result |
 |---|---|---|
 | Book formula check (Python, independent implementation) | `python3 kb/book_formulas.py` | **45 / 45** book examples reproduced |
 | Engine golden & rule tests | `cd packages/casino_engine && dart test` | **65 / 65** pass |
-| App tests (persistence, rules, widget flows) | `cd app && flutter test` | **11 / 11** pass |
+| App tests: models, domain, notifiers (through the privileged actions), widgets | `cd app && flutter test` | **21 / 21** pass |
+| Cloud Functions: JS port of Table 6.2 and marker balance | `cd firebase/functions && npm test` | **5 / 5** pass |
 | Static analysis | `flutter analyze` | 0 errors, 0 warnings (infos only: `material.dart` deprecation in Flutter 3.50) |
 | Release web build | `flutter build web --release --no-web-resources-cdn` | builds |
 | Browser check | Playwright + Chrome on the release build, desktop 1440 px and phone 390 px | all 11 screens render; first-run admin creation and reload persistence verified |
@@ -29,19 +30,12 @@ The Python and Dart implementations were written separately; both reproduce the 
 
 ## App tests
 
-| Test | What it proves |
+| File | What it proves |
 |---|---|
-| Local store round-trips and streams updates | Data survives restart; screens update live |
-| Settings JSON round trip with overrides | Jurisdiction profile and per-game overrides persist |
-| Table shift stores computed drop/win/hold | Saved shift = engine result |
-| Available credit = latest approved line − open markers | Marker issue is capped |
-| Trip summary uses time-weighted average bet (p.364) | Player page matches Ch 19 |
-| Role permissions | Each role gets exactly its permission set |
-| CTR completeness | Report cannot be marked complete without the required fields |
-| First run → every module opens | No dead navigation; admin bootstrap works |
-| Phone layout: every module renders without overflow | 390 px usability |
-| Corrupted local data shows an error | No silent hang on bad storage |
-| Rate a blackjack session through the form | End-to-end: form → engine → saved theo $766.50 |
+| `models_test.dart` | Settings round trip with overrides; model defaults equal the engine's book profile; table shift stores computed win/hold; documents written before the refactor still read (wire values unchanged); unknown enum values fall back safely |
+| `domain_test.dart` | Available credit; time-weighted average bet (p.364); role permissions and least-privilege fallback; referred application needs a Credit Manager signature; CTR completeness |
+| `notifiers_test.dart` | `setUserRole`: first user must be admin, a non-admin cannot escalate. Credit end to end: assess → submit → sign (no double signing) → approve only when Table 6.2 is met → marker capped at available credit **even when the client sends a wrong figure** → payment → write-off refused without two authorized signers, then settled. CTR: fields required, reviewer ≠ preparer, filed. Hits below threshold rejected. SAR cases hidden from roles that may not read them |
+| `widget_test.dart` | First run → every module opens; phone width without overflow; corrupted data shows an error; deep link while signed out returns there after sign-in; tabs keep their own stack; rating a session through the form saves theo $766.50 |
 
 ## Differences from the printed book (errata)
 
@@ -60,5 +54,5 @@ The full list (six items) is in the Phase 1–3 document. None changes a busines
 - **Decisions per hour** for some games (pai gow, pai gow poker, Caribbean stud) are app defaults where the book gives no timing; they are labelled in the UI and editable.
 - **Not covered in v1:** slot floor analytics, drop & count with key control, audit scheduler, sports/race operations UI (engine functions exist and are tested), localisation, PDF/CSV export.
 - **Fonts on web** fall back to Google Fonts for some symbols; offline deployments should bundle a font (no functional impact).
-- **Firestore rules and the Cloud Function** were reviewed but not run against the emulator in this environment; run `firebase emulators:start` with the rules before going live.
-- Models are hand-written rather than freezed (see architecture).
+- **Firestore rules and Cloud Functions** were not run against the Firebase emulator in this environment (the local backend runs the same checks in Dart and is tested; the JS signature port is unit-tested). Run `firebase emulators:start` before going live.
+- **Android/iOS flavor builds** were not compiled here (no Android SDK / Xcode); the web build was.

@@ -1,6 +1,15 @@
 import 'book_ref.dart';
 
-enum MarkerSystem { marker, nameCredit }
+enum MarkerSystem {
+  marker('marker', 'Marker system'),
+  nameCredit('nameCredit', 'Name-credit system');
+
+  const MarkerSystem(this.wire, this.label);
+  final String wire;
+  final String label;
+
+  static MarkerSystem fromWire(String? w) => values.firstWhere((s) => s.wire == w, orElse: () => marker);
+}
 
 /// Inputs for one table shift / gaming day (Ch9 pp.172–176).
 class TableShiftInput {

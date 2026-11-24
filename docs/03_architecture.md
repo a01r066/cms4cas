@@ -21,12 +21,12 @@ flowchart TB
   subgraph Firebase["Firebase (cloud mode)"]
     A[Auth: email/password]
     FS[(Firestore + security rules)]
-    CF[Cloud Function setUserRole]
+    CF[Cloud Functions<br/>roles · credit · markers · CTR]
     H[Hosting: web build]
   end
   F <--> FS
   Client -- sign in --> A
-  Client -- assign roles --> CF --> FS
+  Client -- privileged actions --> CF --> FS
 ```
 
 ### Two packages
@@ -40,49 +40,92 @@ Keeping the maths outside Flutter means it is tested with `dart test` in millise
 
 ### Layers inside the app
 
-Feature-first, following the team's `flutter-riverpod-firebase-architecture` conventions:
+The app follows the team's `flutter-riverpod-firebase-architecture` skill throughout.
 
 ```
 lib/
-  main.dart → bootstrap.dart          # init prefs or Firebase, choose RecordStore, ProviderScope
-  app_config.dart                     # USE_FIREBASE, CASINO_ID dart-defines
-  app/app.dart                        # MaterialApp.router
+  main.dart                     # maps --flavor (or FLAVOR define on web) to F.appFlavor
+  flavors.dart                  # Flavor { dev, prod }, backend choice, CASINO_ID
+  bootstrap.dart                # bindings → orientation → Firebase → App Check → prefs →
+                                # ProviderContainer → Crashlytics → eager providers → runApp
+  firebase_options_dev.dart / firebase_options_prod.dart   # flutterfire configure per project
+  app/
+    app.dart                    # MaterialApp.router
+    session_cleanup.dart        # reacts to signed-in → signed-out
+    local_backend.dart          # registry of local action handlers
   core/
-    data/   record_store.dart, local_record_store.dart, firestore_record_store.dart, repository.dart
-    error/  failure.dart (Failure + mapToFailure)
-    auth/   roles.dart (AppRole, Perm), session.dart
-    routing/ app_router.dart (redirect to /sign-in), shell_scaffold.dart (rail ≥1000 px, drawer below)
-    widgets/ shared form/metric/citation widgets
-  features/<feature>/data/…models + providers
-  features/<feature>/presentation/…pages
+    error/      failure.dart, exceptions.dart, failure_mapper.dart
+    typedefs/   ResultFuture, ResultVoid, Json
+    storage/    record_store.dart (port), local_record_store.dart, firestore_record_store.dart, prefs_service.dart
+    backend/    functions_gateway.dart (Firebase callables | local handlers)
+    session/    before_sign_out_hooks.dart
+    routing/    app_router.dart, route_names.dart, shell_scaffold.dart
+    theme/  widgets/  util/
+  shared/providers/  prefs_provider.dart, firebase_providers.dart, backend_providers.dart
+  features/<feature>/
+    data/datasources/   <feature>_remote_datasource.dart  (+ <feature>_local_actions.dart)
+    data/models/        freezed + json_serializable, fromEntity / toEntity
+    data/repositories/  <feature>_repository_impl.dart — try/catch → Either<Failure, T>
+    domain/entities/    freezed, no JSON
+    domain/repositories/ abstract interface
+    presentation/providers/ <feature>_providers.dart, _state.dart, _notifier.dart (StateNotifier)
+    presentation/pages/ presentation/widgets/
 ```
 
-**Deviations from the house template, on purpose**
+Features with data: auth, settings, players, tables, credit, compliance. Calculator-only features (home, evaluate, staffing, library) have just `presentation/pages`, as the skill allows for small read-only features.
 
-| Template says | This app does | Why |
+**Rules applied in every feature**
+
+- Datasources throw; repositories return `Either<Failure, T>` (streams map errors to `Failure` too). Widgets only show `Failure.displayMessage`.
+- Models know JSON; entities don't. Enums carry wire values with a safe `fromWire` fallback (unknown role → auditor, unknown status → open/draft). Wire strings are the same as before the refactor, so existing data still reads.
+- Reads are `StreamProvider`s keyed on the current user; they return an empty list when signed out, so rules never reject a guest. SAR cases return empty for roles that may not read them. Per-item selectors (`playerByIdProvider`, `availableCreditProvider`…) derive from one stream.
+- Mutations go through a `StateNotifier` per feature with a freezed state (`saving`, `failure`). Notifiers check rules first for instant feedback; the server checks again.
+- **The client never writes privileged state.** Roles, credit signatures and decisions, marker issue/payments/write-offs and CTR sign-offs are named actions (`setUserRole`, `signCreditApplication`, `decideCreditApplication`, `issueMarker`, `recordMarkerPayment`, `signMarkerWriteOff`, `writeOffMarker`, `advanceCtr`). On Firebase they are Cloud Functions; on the local backend, Dart handlers with the same checks and messages. Firestore rules allow the client only drafts and a few named fields.
+
+**Remaining deviations from the skill**
+
+| Skill says | This app does | Why |
 |---|---|---|
-| freezed + json_serializable models | Hand-written immutable classes with `toJson`/`fromJson` | No build_runner step for a first release; models are small. Migrating to freezed later is mechanical. |
-| Per-feature datasource + repository impl | One generic `Repository<T>` over a `RecordStore` port | All features store flat documents in one collection each; the port is what lets the same code run fully offline (local) or on Firestore. |
-| Flavors dev/prod | `--dart-define=USE_FIREBASE`, `CASINO_ID` | v1 has one Firebase project; add flavorizr when a second environment exists. |
-| `package:flutter/material.dart` | unchanged | Flutter 3.50 marks it deprecated in favour of `material_ui`; analyzer shows infos only. Migrate together with the next Flutter upgrade. |
+| Guest mode: browse without an account | Every route except sign-in requires an operator | Internal staff tool; nothing is public. `_requiresAuth` is still the single switch. |
+| Datasource talks to Firestore directly | Datasources use the `RecordStore` port + `FunctionsGateway` | Keeps a no-backend dev mode for demos, training and tests; Firestore is one implementation. |
+| Every string in ARB (`flutter-l10n-a11y`) | English strings in code | Not done in this pass; next step (Vietnamese). |
+| Messaging, Remote Config, Storage | Not added | No feature needs them yet. |
+| `package:flutter/material.dart` | unchanged | Deprecated in Flutter 3.50 in favour of `material_ui`; infos only. |
+
+### Flavors and backends
+
+| | dev | prod |
+|---|---|---|
+| Run | `flutter run --flavor dev` | `flutter run --flavor prod` |
+| Web | `--dart-define=FLAVOR=dev` | `--dart-define=FLAVOR=prod` |
+| Backend | Local (device storage) unless `--dart-define=USE_FIREBASE=true` | Always Firebase |
+| Firebase project | `firebase_options_dev.dart` | `firebase_options_prod.dart` |
+| App id | `com.cmskiss.cms_kiss.dev` | `com.cmskiss.cms_kiss` |
+| App Check | Debug providers | Play Integrity / App Attest; web needs `APPCHECK_WEB_KEY` |
+| Crashlytics | collection off | on (not on web) |
+
+Firebase config is Dart-side only; no `google-services.json` / `GoogleService-Info.plist` is bundled, so a dev build cannot reach production. Android product flavors are in `android/app/flavorizr.gradle.kts`; iOS schemes are created on a Mac with the flutter_flavorizr command at the top of `flavorizr.yaml`.
+
+### Session hygiene
+
+- `BeforeSignOutHooks`: run while still signed in, time-boxed (Firebase: flush pending writes).
+- `sessionCleanupProvider`: on signed-in → signed-out, drops the profile; data providers re-key to empty. Firestore disk persistence is **off**, so no patron data stays on a shared device.
 
 ### Data flow and error handling
 
-- `RecordStore.watch(collection)` → `Stream<List<Json>>`; `Repository<T>.watch()` maps to models; pages use `StreamProvider`s, so every screen updates live, including across devices in cloud mode.
-- Writes go through `Repository.save/remove`, which return `Either<Failure, T>`; pages show `Failure.message` in a snackbar. No raw exception text reaches users.
-- Corrupt local data surfaces as a readable error state, not a blank screen (tested).
+- `RecordStore.watch(collection)` → datasource maps to models → repository maps to entities and `Failure`s → `StreamProvider` → page. Every screen updates live, across devices on Firebase.
+- Corrupt local data surfaces as a readable error, not a blank screen (tested).
 
 ### Persistence modes
 
-| | Local (default) | Cloud |
+| | Local (dev default) | Firebase |
 |---|---|---|
-| Start | `flutter run` | `flutter run --dart-define=USE_FIREBASE=true --dart-define=CASINO_ID=<id>` |
 | Storage | `shared_preferences` (browser localStorage on web), one key per collection | Firestore `casinos/{casinoId}/{collection}/{id}` |
-| Sign-in | pick a local user (no password) | Firebase Auth email/password |
-| Roles | stored locally, editable by admin | written only by `setUserRole` Cloud Function; rules forbid client writes |
-| Use for | demo, training, single-device trial, offline evaluation | production / multi-user |
+| Sign-in | pick an operator (no password) | Firebase Auth email/password |
+| Privileged actions | Dart handlers (`*_local_actions.dart`) | Cloud Functions (`firebase/functions/src/index.js`) |
+| Use for | demo, training, tests | production / multi-user |
 
-Local mode has **no authentication** — anyone with the device can pick any user. It is for evaluation and training, not for live operations.
+Local mode has **no authentication** — anyone with the device can pick any user. It is for evaluation and training, not live operations.
 
 ## Roles and permissions
 
@@ -104,6 +147,7 @@ Separation of duties enforced in the app:
 - A write-off needs two different authorized signers.
 - A referred credit application needs the credit manager's signature before approval.
 - Cash transactions are append-only (Firestore rules deny update/delete).
+- Each of these is enforced by the server action, not only by the UI.
 
 The UI hides actions a role cannot perform; Firestore rules enforce the same in cloud mode, so a modified client cannot bypass them.
 
@@ -111,6 +155,8 @@ The UI hides actions a role cannot perform; Firestore rules enforce the same in 
 
 - Firestore rules: membership via `casinos/{cid}/users/{uid}`; per-collection role lists; `users` writable only by Admin SDK; SAR cases readable only by admin/compliance/casino manager/auditor.
 - `setUserRole` callable: caller must be an admin of that casino, except the very first user of an empty casino (bootstrap); validates role and credit role values; looks up accounts by email.
+- Credit, marker and CTR callables re-apply Table 6.2, the available-credit cap, the two-signer write-off rule and reviewer ≠ preparer inside transactions, and stamp the signer from the server-side profile — a modified client cannot forge a signature or an approval.
+- App Check is activated in prod; Firestore disk persistence is off.
 - No secrets in the client. `firebase_options.dart` is generated by `flutterfire configure` and contains only public identifiers.
 - Personal data (ID numbers, addresses) is stored as entered; use cloud mode with Firestore's encryption at rest for real patron data. Do not use local mode for real patron data on shared devices.
 

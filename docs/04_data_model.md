@@ -33,6 +33,16 @@ erDiagram
 | `barred_patrons` | description, reason, playerId?, addedBy, since, active | Checked on every cash entry. |
 | `sar_cases` | subject, summary, openedBy, amount, detectedAt, extended, filedAt? | Due = detected + 30 days (+30 if extended). Restricted read. |
 
+## Who writes what
+
+| Collection | Client may write | Only via action (Cloud Function / local handler) |
+|---|---|---|
+| `users` | — | everything (`setUserRole`) |
+| `credit_applications` | create as draft; `answers`, `outcome`, `referrals`, `status` draft → pending while draft | signatures, approve, decline |
+| `markers` | `collectionNote` | issue, payments, write-off signatures, write-off |
+| `ctr_reports` | create as draft; `fields` while draft | prepared, reviewed, filed |
+| `cash_transactions` | create (append-only) | — |
+
 ## Indexes
 
 All queries are whole-collection streams filtered client-side, so no composite indexes are needed for v1. When a property grows past a few thousand records per collection, add server-side filters (by `gamingDay`, `playerId`) and the matching indexes; the `RecordStore` port is the single place to change.

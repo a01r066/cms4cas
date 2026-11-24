@@ -24,7 +24,16 @@ enum CreditRole {
   }
 }
 
-enum LineType { permanent, temporary }
+enum LineType {
+  permanent('permanent', 'Permanent'),
+  temporary('temporary', 'Temporary (TTO)');
+
+  const LineType(this.wire, this.label);
+  final String wire;
+  final String label;
+
+  static LineType fromWire(String? w) => values.firstWhere((t) => t.wire == w, orElse: () => permanent);
+}
 
 /// Outcome of checking signatures against the authorizing policy.
 class SignatureCheck {
@@ -156,7 +165,27 @@ class CreditCheckAnswers {
   });
 }
 
-enum CreditOutcome { readyForDecision, proceedWithCaution, referToCreditManager, doNotIssue, incomplete }
+enum CreditOutcome {
+  readyForDecision('readyForDecision', 'Ready for decision'),
+  proceedWithCaution('proceedWithCaution', 'Proceed with caution'),
+  referToCreditManager('referToCreditManager', 'Refer to credit manager'),
+  doNotIssue('doNotIssue', 'Do not issue'),
+  incomplete('incomplete', 'Incomplete');
+
+  const CreditOutcome(this.wire, this.label);
+  final String wire;
+  final String label;
+
+  /// Whether a line may be submitted for signatures / approved after this outcome.
+  bool get allowsApproval => this != doNotIssue && this != incomplete;
+
+  static CreditOutcome? fromWire(String? w) {
+    for (final o in values) {
+      if (o.wire == w) return o;
+    }
+    return null;
+  }
+}
 
 class CreditStep {
   final int number;
