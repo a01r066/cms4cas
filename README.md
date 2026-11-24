@@ -109,6 +109,32 @@ flutter run --flavor dev           # Android / iOS
 
 Data is stored on the device (browser localStorage on web). On first launch create the administrator. **The local backend has no passwords** — use it for evaluation, demos and training only.
 
+## Demo / test data
+
+A realistic data set that exercises every screen. It's built by `features/demo_data/data/demo_data_generator.dart` from the app's own models and the engine formulas, so the numbers agree (theo, win/hold, Table 6.2 signatures, CTR aggregates). Dates are relative to today, and every id starts with `demo-`, so it can be removed without touching real records.
+
+| Area | What you get |
+|---|---|
+| Staff | 9 users, one per role, with credit authority: admin/President, Casino Manager, Credit Manager, VP Finance, Host, Pit, Cage (Director of Cage), Compliance, Auditor |
+| Players & ratings | 14 players (2 without ID on file); ~50 rated sessions over 30 days, including the book's roulette example (theo $1,065.15, p.221) |
+| Tables | 10 tables (BJ, craps, roulette, baccarat; BA-02 uses name credit); 14 days × 3 shifts; BJ-04 holds below objective (Investigate); one documented BA-01 hit |
+| Credit | Lines approved under Table 6.2; one awaiting a signature, one referred to the Credit Manager (4 in 14), a draft, a decline |
+| Markers | Open markers in every aging bucket, a partial payment, one paid, one settled with a 2-signature write-off, one write-off waiting for a 2nd signature |
+| Compliance | Today's reportable cash-in with no CTR yet (Home alert), a CTR draft for an unidentified patron, a filed CTR, MTL entries, near-threshold structuring with an open SAR case, a SAR due within a week, a filed SAR, barred patrons, one access request |
+
+**Local backend (no Firebase):** sign in as an administrator → **Settings → Demo data → Load demo data**. The demo staff then appear in the sign-in list, so you can try each role. **Remove demo data** deletes every `demo-` record and keeps your own profile.
+
+**CMS4Cas-Dev (Firebase):** load from a terminal (it refuses the production project):
+
+```bash
+gcloud auth application-default login
+bash app/tool/seed_demo_data.sh                  # regenerates the data, writes Firestore, creates logins
+bash app/tool/seed_demo_data.sh --remove         # deletes demo documents and demo logins
+bash app/tool/seed_demo_data.sh --no-logins      # data only
+```
+
+The script asks for one password for all demo logins: `demo.admin@cms4cas.test`, `demo.cm@…`, `demo.credit@…`, `demo.vpf@…`, `demo.host@…`, `demo.pit@…`, `demo.cage@…`, `demo.compliance@…`, `demo.auditor@…`. The generated `app/firebase/seed/demo_data.json` is git-ignored. Set `FIREBASE_AUTH_EMULATOR_HOST` and `FIRESTORE_EMULATOR_HOST` to seed the emulators instead.
+
 ## Code generation
 
 Generated `*.freezed.dart` and `*.g.dart` files are committed. After changing an entity, model or state class:
@@ -132,7 +158,7 @@ dart run build_runner build -d     # or: dart run build_runner watch -d
 
 ```bash
 cd packages/casino_engine && dart pub get && dart test     # 65 engine tests (book examples, rules)
-cd ../../app && flutter test                                # 26 app tests (models, domain, notifiers, registration, widgets)
+cd ../../app && flutter test                                # 38 app tests (models, domain, notifiers, registration, demo data, widgets)
 cd firebase/functions && npm install && npm test            # Functions load + Table 6.2 port (from app/)
 cd ../../.. && python3 kb/book_formulas.py                  # 45 book examples (independent Python check)
 ```

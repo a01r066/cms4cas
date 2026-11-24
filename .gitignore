@@ -62,6 +62,7 @@ app/firebase.json
 # ── Firebase CLI & emulators ───────────────────────────────────────────
 **/.firebase/
 **/firebase/hosting_public/
+**/firebase/seed/
 **/*-debug.log
 **/emulator-data/
 **/firebase-export-*/

@@ -12,6 +12,12 @@ abstract class RecordStore {
   /// Create or replace a whole document.
   Future<void> put(String collection, String id, Json data);
 
+  /// Create or replace many documents at once ({id: data}).
+  Future<void> putAll(String collection, Map<String, Json> docs);
+
+  /// Delete many documents at once.
+  Future<void> deleteAll(String collection, Iterable<String> ids);
+
   /// Change only [fields] of an existing document (Firestore `update`).
   Future<void> patch(String collection, String id, Json fields);
   Future<void> delete(String collection, String id);

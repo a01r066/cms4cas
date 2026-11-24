@@ -12,6 +12,7 @@
   "scripts": {
     "test": "node --no-experimental-require-module --test test/*.test.js",
     "create:admin": "node scripts/create-user.js --role admin",
-    "create:user": "node scripts/create-user.js"
+    "create:user": "node scripts/create-user.js",
+    "seed:demo": "node scripts/seed-demo-data.js"
   }
 }

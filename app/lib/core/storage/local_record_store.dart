@@ -63,6 +63,24 @@ class LocalRecordStore implements RecordStore {
   }
 
   @override
+  Future<void> putAll(String collection, Map<String, Json> docs) async {
+    if (docs.isEmpty) return;
+    final m = _read(collection);
+    docs.forEach((id, data) => m[id] = {...data, 'id': id});
+    await _write(collection, m);
+  }
+
+  @override
+  Future<void> deleteAll(String collection, Iterable<String> ids) async {
+    final m = _read(collection);
+    var changed = false;
+    for (final id in ids) {
+      changed = m.remove(id) != null || changed;
+    }
+    if (changed) await _write(collection, m);
+  }
+
+  @override
   Future<void> patch(String collection, String id, Json fields) async {
     final m = _read(collection);
     final cur = m[id];

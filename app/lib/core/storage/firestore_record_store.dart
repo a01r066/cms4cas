@@ -34,6 +34,33 @@ class FirestoreRecordStore implements RecordStore {
   @override
   Future<void> put(String collection, String id, Json data) => _col(collection).doc(id).set({...data, 'id': id});
 
+  /// Firestore allows 500 writes per batch.
+  static const _batchSize = 450;
+
+  @override
+  Future<void> putAll(String collection, Map<String, Json> docs) async {
+    final entries = docs.entries.toList();
+    for (var i = 0; i < entries.length; i += _batchSize) {
+      final batch = db.batch();
+      for (final e in entries.skip(i).take(_batchSize)) {
+        batch.set(_col(collection).doc(e.key), {...e.value, 'id': e.key});
+      }
+      await batch.commit();
+    }
+  }
+
+  @override
+  Future<void> deleteAll(String collection, Iterable<String> ids) async {
+    final list = ids.toList();
+    for (var i = 0; i < list.length; i += _batchSize) {
+      final batch = db.batch();
+      for (final id in list.skip(i).take(_batchSize)) {
+        batch.delete(_col(collection).doc(id));
+      }
+      await batch.commit();
+    }
+  }
+
   @override
   Future<void> patch(String collection, String id, Json fields) => _col(collection).doc(id).update(fields);
 

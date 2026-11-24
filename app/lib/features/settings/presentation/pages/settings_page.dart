@@ -14,6 +14,7 @@ import '../../domain/entities/app_settings.dart';
 import '../providers/settings_notifier.dart';
 import '../providers/settings_providers.dart';
 import '../../../../shared/providers/backend_providers.dart';
+import '../../../demo_data/presentation/widgets/demo_data_card.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -192,6 +193,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ]),
         const SizedBox(height: 16),
         const _UsersCard(),
+        const SizedBox(height: 16),
+        const DemoDataCard(),
       ]),
     );
   }

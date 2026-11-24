@@ -1,6 +1,7 @@
 import 'package:casino_engine/casino_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../theme/theme.dart';
 import '../util/fmt.dart';
 
 /// Page body: scrollable, centred, max width; optional actions in the app bar.
@@ -10,7 +11,8 @@ class PageBody extends StatelessWidget {
   const PageBody({super.key, required this.children, this.maxWidth = 1100});
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 48),
+        // Phones: leave room for the floating bottom bar.
+        padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.sizeOf(context).width >= 1000 ? 48 : 120),
         child: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth),
@@ -32,7 +34,7 @@ class SectionCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (title != null)
             Padding(
@@ -159,22 +161,98 @@ class Metric extends StatelessWidget {
   final String value;
   final String? note;
   final Color? color;
-  const Metric(this.label, this.value, {super.key, this.note, this.color});
+  final IconData? icon;
+  const Metric(this.label, this.value, {super.key, this.note, this.color, this.icon});
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
+    final p = AppPalette.of(context);
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        color: t.cardTheme.color,
         border: Border.all(color: t.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Radii.tile + 2),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: t.textTheme.labelMedium?.copyWith(color: t.colorScheme.onSurfaceVariant)),
-        const SizedBox(height: 4),
-        Text(value, style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: color)),
+        Row(children: [
+          if (icon != null) ...[
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(color: p.tile, borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, size: 16, color: p.onTile),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Expanded(child: Text(label, style: t.textTheme.labelMedium)),
+        ]),
+        const SizedBox(height: 8),
+        Text(value, style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: color)),
         if (note != null) Padding(padding: const EdgeInsets.only(top: 2), child: Text(note!, style: t.textTheme.bodySmall)),
       ]),
+    );
+  }
+}
+
+/// Dark-green gradient header card (Home hero, feature banners).
+class HeroCard extends StatelessWidget {
+  const HeroCard({super.key, required this.children, this.padding = const EdgeInsets.all(20)});
+  final List<Widget> children;
+  final EdgeInsets padding;
+  @override
+  Widget build(BuildContext context) {
+    final p = AppPalette.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(gradient: p.heroGradient, borderRadius: BorderRadius.circular(Radii.card + 4)),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(children: [
+        // Soft light sweep like the reference header.
+        Positioned(
+          right: -60, top: -80,
+          child: Container(width: 220, height: 220,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.05))),
+        ),
+        Padding(
+          padding: padding,
+          child: DefaultTextStyle.merge(
+            style: TextStyle(color: p.onHero),
+            child: IconTheme.merge(
+              data: IconThemeData(color: p.onHero),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+/// Mint rounded icon tile with a caption (quick access grid).
+class QuickTile extends StatelessWidget {
+  const QuickTile({super.key, required this.icon, required this.label, required this.onTap});
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    final p = AppPalette.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(Radii.tile),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 52, height: 52,
+            decoration: BoxDecoration(color: p.tile, borderRadius: BorderRadius.circular(Radii.tile)),
+            child: Icon(icon, color: p.onTile, size: 24),
+          ),
+          const SizedBox(height: 8),
+          Text(label, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600)),
+        ]),
+      ),
     );
   }
 }
@@ -191,16 +269,16 @@ class Callout extends StatelessWidget {
   final IconData icon;
   final Color? color;
   const Callout(this.text, {super.key, this.icon = Icons.info_outline, this.color});
-  factory Callout.warn(String t) => Callout(t, icon: Icons.warning_amber_rounded, color: Colors.orange.shade800);
-  factory Callout.bad(String t) => Callout(t, icon: Icons.block, color: Colors.red.shade700);
-  factory Callout.good(String t) => Callout(t, icon: Icons.check_circle_outline, color: Colors.green.shade700);
+  factory Callout.warn(String t) => Callout(t, icon: Icons.warning_amber_rounded, color: Brand.warning);
+  factory Callout.bad(String t) => Callout(t, icon: Icons.block, color: Brand.danger);
+  factory Callout.good(String t) => Callout(t, icon: Icons.check_circle_outline, color: Brand.limeDark);
   @override
   Widget build(BuildContext context) {
     final c = color ?? Theme.of(context).colorScheme.primary;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: c.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10), border: Border.all(color: c.withValues(alpha: 0.3))),
+      decoration: BoxDecoration(color: c.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(Radii.field), border: Border.all(color: c.withValues(alpha: 0.25))),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, color: c, size: 20),
         const SizedBox(width: 10),
