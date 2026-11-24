@@ -1,0 +1,9 @@
+name: casino_engine
+description: Pure-Dart calculations and rule engines from Casino Operations Management (2e). Every function cites chapter/page.
+version: 1.0.0
+publish_to: none
+environment:
+  sdk: ^3.6.0
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^5.0.0

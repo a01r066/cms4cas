@@ -1,0 +1,797 @@
+{
+ "_source": "Kilby, Fox & Lucas, Casino Operations Management 2e (Wiley 2005). Values are the book's; jurisdiction rules are as of 2003 and must be configurable.",
+ "blackjack_rule_adjustments": {
+  "source": "Table 11.5 p.215 (Stanford Wong BJedge)",
+  "unit": "% casino advantage, add to base",
+  "decks": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8
+  ],
+  "rows": {
+   "Strip rules (base)": [
+    -0.01,
+    0.32,
+    0.43,
+    0.49,
+    0.52,
+    0.54,
+    0.56,
+    0.57
+   ],
+   "No double on 11": [
+    0.78,
+    0.7,
+    0.67,
+    0.65,
+    0.64,
+    0.64,
+    0.63,
+    0.63
+   ],
+   "No double on 10": [
+    0.52,
+    0.49,
+    0.48,
+    0.47,
+    0.46,
+    0.46,
+    0.46,
+    0.46
+   ],
+   "No double on 9": [
+    0.12,
+    0.09,
+    0.08,
+    0.08,
+    0.08,
+    0.08,
+    0.07,
+    0.07
+   ],
+   "No double on 8": [
+    0.01,
+    0.01,
+    0.01,
+    0.01,
+    0.01,
+    0.01,
+    0.01,
+    0.01
+   ],
+   "No soft doubling": [
+    0.13,
+    0.11,
+    0.1,
+    0.09,
+    0.09,
+    0.09,
+    0.09,
+    0.09
+   ],
+   "Double on 11 only": [
+    0.77,
+    1.02,
+    1.1,
+    1.14,
+    1.16,
+    1.18,
+    1.19,
+    1.2
+   ],
+   "Double on 10, 11 only": [
+    0.25,
+    0.53,
+    0.62,
+    0.67,
+    0.7,
+    0.72,
+    0.73,
+    0.74
+   ],
+   "Double on 9, 10, 11 only": [
+    0.13,
+    0.44,
+    0.54,
+    0.59,
+    0.62,
+    0.64,
+    0.66,
+    0.67
+   ],
+   "Double on 8, 9, 10, 11 only": [
+    0.12,
+    0.43,
+    0.53,
+    0.58,
+    0.61,
+    0.63,
+    0.65,
+    0.66
+   ],
+   "Dealer hits soft 17": [
+    0.19,
+    0.21,
+    0.22,
+    0.22,
+    0.22,
+    0.22,
+    0.22,
+    0.22
+   ],
+   "BJ pays 1:1": [
+    2.32,
+    2.29,
+    2.28,
+    2.28,
+    2.27,
+    2.27,
+    2.26,
+    2.26
+   ],
+   "BJ pays 6:5 (row 1 — duplicate label in book, verify)": [
+    1.45,
+    1.43,
+    1.43,
+    1.43,
+    1.43,
+    1.42,
+    1.42,
+    1.42
+   ],
+   "No hole card (player loses all doubles/splits to dealer BJ)": [
+    0.11,
+    0.11,
+    0.11,
+    0.11,
+    0.11,
+    0.11,
+    0.11,
+    0.11
+   ],
+   "BJ pays 6:5": [
+    1.395,
+    1.373,
+    1.367,
+    1.363,
+    1.361,
+    1.36,
+    1.359,
+    1.358
+   ],
+   "Double on any number of cards": [
+    -0.24,
+    -0.23,
+    -0.23,
+    -0.23,
+    -0.23,
+    -0.22,
+    -0.23,
+    -0.22
+   ],
+   "Resplit aces": [
+    -0.03,
+    -0.05,
+    -0.06,
+    -0.07,
+    -0.07,
+    -0.07,
+    -0.08,
+    -0.08
+   ],
+   "Double after splitting": [
+    -0.12,
+    -0.13,
+    -0.14,
+    -0.14,
+    -0.14,
+    -0.14,
+    -0.14,
+    -0.14
+   ],
+   "Double after splitting 11 only": [
+    -0.06,
+    -0.07,
+    -0.07,
+    -0.07,
+    -0.07,
+    -0.07,
+    -0.07,
+    -0.07
+   ],
+   "Double after splitting 10, 11 only": [
+    -0.11,
+    -0.12,
+    -0.12,
+    -0.12,
+    -0.12,
+    -0.12,
+    -0.12,
+    -0.12
+   ],
+   "Early surrender": [
+    -0.62,
+    -0.63,
+    -0.63,
+    -0.64,
+    -0.63,
+    -0.63,
+    -0.64,
+    -0.63
+   ],
+   "Early surrender (dealer hits s17)": [
+    -0.51,
+    -0.5,
+    -0.5,
+    -0.5,
+    -0.5,
+    -0.5,
+    -0.5,
+    -0.5
+   ],
+   "Late surrender": [
+    -0.02,
+    -0.05,
+    -0.06,
+    -0.07,
+    -0.07,
+    -0.07,
+    -0.07,
+    -0.07
+   ],
+   "Late surrender (dealer hits s17)": [
+    -0.15,
+    -0.14,
+    -0.13,
+    -0.13,
+    -0.13,
+    -0.13,
+    -0.12,
+    -0.12
+   ],
+   "6 card auto winner": [
+    -0.04,
+    -0.11,
+    -0.13,
+    -0.15,
+    -0.15,
+    -0.16,
+    -0.16,
+    -0.16
+   ],
+   "BJ pays 2 to 1": [
+    -2.32,
+    -2.29,
+    -2.28,
+    -2.28,
+    -2.27,
+    -2.27,
+    -2.27,
+    -2.27
+   ],
+   "Dealer BJ ties w/player built 21": [
+    -0.17,
+    -0.17,
+    -0.17,
+    -0.17,
+    -0.17,
+    -0.17,
+    -0.17,
+    -0.17
+   ]
+  }
+ },
+ "player_rating_defaults": {
+  "source": "Ch12 pp.225–231",
+  "note": "System HA × player-type multiplier; most conservative type when in doubt (p.229)",
+  "games": {
+   "Blackjack": {
+    "ha": 0.0073,
+    "soft": 1.0,
+    "avg": 1.0,
+    "hard": 1.0
+   },
+   "Craps": {
+    "ha": 0.01,
+    "soft": 0.63,
+    "avg": 0.37,
+    "hard": 0.178,
+    "note": "per throw"
+   },
+   "Roulette": {
+    "ha": 0.0526,
+    "soft": null,
+    "avg": 1.0,
+    "hard": 0.51
+   },
+   "Baccarat": {
+    "ha": 0.0124,
+    "soft": 1.29,
+    "avg": 1.0,
+    "hard": 0.85
+   },
+   "Pai Gow": {
+    "ha": 0.0204,
+    "soft": 1.17,
+    "avg": 1.0,
+    "hard": 0.74
+   },
+   "Pai Gow Poker": {
+    "ha": 0.02032,
+    "soft": 1.4,
+    "avg": 1.0,
+    "hard": 0.55
+   },
+   "Caribbean Stud": {
+    "ha": 0.0547,
+    "soft": 1.3,
+    "avg": 1.0,
+    "hard": 1.0,
+    "note": "exclude progressive from avg bet"
+   }
+  }
+ },
+ "decisions_per_hour_by_players": {
+  "source": "Table 13.1 p.251",
+  "blackjack": {
+   "1": 209,
+   "2": 139,
+   "3": 105,
+   "4": 84,
+   "5": 70,
+   "6": 60,
+   "7": 52
+  },
+  "dice": {
+   "1": 249,
+   "3": 216,
+   "5": 144,
+   "7": 135,
+   "9": 123,
+   "11": 102
+  },
+  "roulette": {
+   "1": 112,
+   "2": 76,
+   "3": 60,
+   "4": 55,
+   "5": 48,
+   "6": 35
+  }
+ },
+ "dice_bets": {
+  "source": "Table 12.1 p.226 / Table 11.4 p.213",
+  "bets": [
+   [
+    "Pass & Come",
+    1.414,
+    3.376
+   ],
+   [
+    "Pass w/ single odds",
+    0.848,
+    null
+   ],
+   [
+    "Pass w/ double odds",
+    0.606,
+    null
+   ],
+   [
+    "Pass w/ triple odds",
+    0.471,
+    null
+   ],
+   [
+    "Don't Pass & Don't Come (use 1.36 for rating)",
+    1.402,
+    3.472
+   ],
+   [
+    "DP w/ single odds",
+    0.68,
+    null
+   ],
+   [
+    "DP w/ double odds",
+    0.453,
+    null
+   ],
+   [
+    "DP w/ triple odds",
+    0.34,
+    null
+   ],
+   [
+    "Big 6 & 8",
+    9.09,
+    3.27
+   ],
+   [
+    "Field (2 double, 12 triple)",
+    2.78,
+    1.0
+   ],
+   [
+    "Place 4/10",
+    6.66,
+    5.68
+   ],
+   [
+    "Place 5/9",
+    4.0,
+    5.115
+   ],
+   [
+    "Place 6/8",
+    1.515,
+    4.65
+   ],
+   [
+    "Buy 4/10",
+    4.76,
+    5.68
+   ],
+   [
+    "Buy 5/9",
+    4.76,
+    5.115
+   ],
+   [
+    "Buy 6/8",
+    4.76,
+    4.65
+   ],
+   [
+    "Lay 4/10",
+    2.439,
+    4.0
+   ],
+   [
+    "Lay 5/9",
+    3.225,
+    3.6
+   ],
+   [
+    "Lay 6/8",
+    4.0,
+    3.27
+   ],
+   [
+    "Hard 4/10",
+    11.11,
+    4.0
+   ],
+   [
+    "Hard 6/8",
+    9.09,
+    3.27
+   ],
+   [
+    "Any crap",
+    11.11,
+    1.0
+   ],
+   [
+    "Aces & 12 (30:1)",
+    13.89,
+    1.0
+   ],
+   [
+    "Ace-deuce & 11 (15:1)",
+    11.11,
+    1.0
+   ],
+   [
+    "Any seven",
+    16.67,
+    1.0
+   ],
+   [
+    "Hop bets",
+    11.11,
+    1.0
+   ]
+  ],
+  "columns": [
+   "bet",
+   "disadvantage_pct",
+   "throws_per_decision"
+  ]
+ },
+ "credit_authorization_matrix": {
+  "source": "Table 6.2 p.103",
+  "credit_committee": [
+   "President/General Manager",
+   "VP Finance",
+   "Casino Manager",
+   "Credit Manager"
+  ],
+  "credit_executives": [
+   "Any Credit Committee member",
+   "Shift Managers",
+   "Hosts"
+  ],
+  "permanent": [
+   {
+    "max": 50000,
+    "signatures": 2,
+    "rule": "1 Credit Manager or VP Finance + 1 other credit executive"
+   },
+   {
+    "max": 100000,
+    "signatures": 3,
+    "rule": "1 Credit Manager or VP Finance + 1 credit executive + 1 credit committee member"
+   },
+   {
+    "max": null,
+    "signatures": "quorum",
+    "rule": "Unanimous agreement of Credit Committee"
+   }
+  ],
+  "temporary": [
+   {
+    "max": 10000,
+    "signatures": 1,
+    "rule": "Any credit executive"
+   },
+   {
+    "max": 25000,
+    "signatures": 2,
+    "rule": "Any two credit executives"
+   },
+   {
+    "max": 50000,
+    "signatures": 3,
+    "rule": "Credit Manager + any two credit executives"
+   }
+  ],
+  "write_off_approvers": {
+   "source": "p.105",
+   "roles": [
+    "President/GM",
+    "VP Finance",
+    "Credit Manager",
+    "Director of Casino Cage"
+   ],
+   "min_signatures": 2
+  }
+ },
+ "currency_reporting_reg6a_2003": {
+  "source": "Ch5 pp.61–82",
+  "ctr_threshold": 10000,
+  "mtl_threshold": 3000,
+  "prohibited_cash_for_cash_over": 3000,
+  "prohibited_casino_check_for_cash_over": 3000,
+  "sar_threshold": 5000,
+  "sar_file_days": 30,
+  "sar_extension_days": 30,
+  "nongaming_form8300_aggregation_months": 12,
+  "rules": [
+   "Never combine cash-in with cash-out",
+   "Aggregate like-kind only, except single-visit rule",
+   "Casino chooses 24h gaming-day cutoff",
+   "Refusal to identify → bar from all affiliated casinos until provided",
+   "Reviewer signature must differ from preparer",
+   "Do not tell patron a SAR was filed"
+  ]
+ },
+ "key_employee_report_criteria": {
+  "source": "NV Reg 3.100 pp.20–21",
+  "items": [
+   "Earns more than $75,000 annually",
+   "Can approve casino credit limits",
+   "Can approve rim credit",
+   "Can extend credit limit by greater of 10% or $1,000",
+   "Can recommend/approve settlement or write-off of credit instruments",
+   "Can hire/terminate supervisory casino personnel",
+   "Gaming or security shift manager",
+   "Can authorize comps other than food/beverage",
+   "Manages accounting, F&B, cage, credit & collections, personnel, internal audit, security, surveillance, entertainment, or sales & marketing",
+   "Can enter reportable contracts (Reg 8.130)",
+   "Represented to regulators as important",
+   "Formulates management policy"
+  ]
+ },
+ "internal_audit_calendar_nv_mics": {
+  "source": "Ch10 pp.200–201",
+  "semiannual": [
+   "Table games",
+   "Slot department"
+  ],
+  "annual": [
+   "Keno",
+   "Card games",
+   "Bingo",
+   "Entertainment",
+   "Race & sports book",
+   "Cage & credit",
+   "Cage accountability vs GL + count",
+   "EDP",
+   "Pari-mutuel",
+   "Gross revenue vs tax returns",
+   "Selected regulations"
+  ],
+  "biennial": [
+   "Junket/branch offices with ≥$200,000 avg instruments"
+  ],
+  "quarterly": [
+   "Reg 6A interviews (Ch5)"
+  ],
+  "retention_years": 5,
+  "stat_fluctuation_investigate_pct": 3
+ },
+ "player_action_criteria": {
+  "source": "Table 15.5 p.295",
+  "hours_basis": "4 hours per night",
+  "rows": [
+   [
+    3000,
+    60,
+    158,
+    18,
+    0
+   ],
+   [
+    5000,
+    100,
+    263,
+    29,
+    0
+   ],
+   [
+    7500,
+    150,
+    395,
+    44,
+    0
+   ],
+   [
+    10000,
+    200,
+    526,
+    59,
+    500
+   ],
+   [
+    15000,
+    300,
+    789,
+    88,
+    750
+   ],
+   [
+    20000,
+    400,
+    1053,
+    117,
+    1000
+   ],
+   [
+    25000,
+    500,
+    1316,
+    147,
+    1250
+   ],
+   [
+    50000,
+    1000,
+    2632,
+    293,
+    2500
+   ]
+  ],
+  "columns": [
+   "credit_limit",
+   "bj_bac_avg_bet",
+   "dice_avg_bet",
+   "roulette_avg_bet",
+   "max_airfare"
+  ]
+ },
+ "dead_chip_effective_ha": {
+  "source": "p.273",
+  "rows": [
+   [
+    1.5,
+    0.4,
+    0.56
+   ],
+   [
+    1.25,
+    0.51,
+    0.67
+   ],
+   [
+    1.0,
+    0.62,
+    0.78
+   ],
+   [
+    0.75,
+    0.73,
+    0.89
+   ]
+  ],
+  "columns": [
+   "bonus_pct",
+   "banker_ha_pct",
+   "player_ha_pct"
+  ]
+ },
+ "nevada_gaming_tax_tiers_2003": {
+  "source": "p.36",
+  "tiers": [
+   [
+    50000,
+    0.035
+   ],
+   [
+    84000,
+    0.045
+   ],
+   [
+    null,
+    0.0675
+   ]
+  ]
+ },
+ "department_margins": {
+  "source": "p.179",
+  "slots": [
+   0.6,
+   0.7
+  ],
+  "table_games_ex_baccarat": [
+   0.15,
+   0.2
+  ],
+  "keno": [
+   0.25,
+   0.3
+  ],
+  "race_sports": [
+   0.15,
+   0.25
+  ],
+  "poker": [
+   0.2,
+   0.3
+  ]
+ },
+ "parlay_card_pays": {
+  "source": "p.337",
+  "for_one": {
+   "3": 6,
+   "4": 11,
+   "5": 20,
+   "6": 40,
+   "7": 80,
+   "8": 150,
+   "9": 300,
+   "10": 600
+  }
+ },
+ "sd_per_dollar": {
+  "source": "Ch15 p.285, Ch19 pp.366–372",
+  "baccarat_player": 0.9512,
+  "baccarat_bank": 0.9274,
+  "roulette_even": 0.998614,
+  "roulette_straight": 5.7626,
+  "bj_spots": {
+   "1": 1.1225,
+   "2": 1.8762,
+   "3": 2.6038,
+   "4": 3.3226,
+   "5": 4.0373,
+   "6": 4.7497,
+   "7": 5.4608
+  }
+ }
+}
