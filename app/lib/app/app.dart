@@ -13,5 +13,10 @@ class CmsApp extends ConsumerWidget {
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),
         routerConfig: ref.watch(routerProvider),
+        // Wide screens get the quieter desktop variant of the theme.
+        builder: (context, child) {
+          if (!isDesktop(context)) return child!;
+          return Theme(data: buildTheme(Theme.of(context).brightness, desktop: true), child: child!);
+        },
       );
 }

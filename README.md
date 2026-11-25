@@ -24,6 +24,7 @@ kb/                       Knowledge base: chapter notes, 168-term glossary, refe
 | [05 UI/UX](app/docs/05_ui_ux.md) | Principles, layout, screens |
 | [06 Testing report](app/docs/06_testing_report.md) | Results, book cross-checks, errata, limitations |
 | [07 User guide](app/docs/07_user_guide.md) | How to use each module |
+| [08 Build and deploy](app/docs/08_build_and_deploy.md) | Release workflow, web/Android/iOS builds, signing, App Check, rollback |
 
 ## Tech stack
 
@@ -57,7 +58,9 @@ app/lib/
     presentation/pages/ · presentation/widgets/
 ```
 
-Features with data: `auth`, `settings`, `players`, `tables`, `credit`, `compliance`. Calculator-only features (`home`, `evaluate`, `staffing`, `library`) have only `presentation/pages`.
+Features with data: `auth`, `settings`, `players`, `tables`, `credit`, `compliance`; `demo_data` loads and removes test data. Calculator-only features (`home`, `evaluate`, `staffing`, `library`) have only `presentation/pages`.
+
+Look and feel: one brand palette (forest green, lime, mint) in `core/theme/theme.dart`, with a phone layout (floating bottom bar) and a quieter desktop layout at ≥ 1000 px (sidebar, hold chart on Home and Tables). Details and screenshots: [`app/docs/05_ui_ux.md`](app/docs/05_ui_ux.md).
 
 - **Datasources throw, repositories return `Either`.** Widgets only show `Failure.displayMessage`.
 - **Reads** are `StreamProvider`s keyed on the signed-in operator (empty when signed out). **Writes** go through one `StateNotifier` per feature.
@@ -124,10 +127,15 @@ A realistic data set that exercises every screen. It's built by `features/demo_d
 
 **Local backend (no Firebase):** sign in as an administrator → **Settings → Demo data → Load demo data**. The demo staff then appear in the sign-in list, so you can try each role. **Remove demo data** deletes every `demo-` record and keeps your own profile.
 
-**CMS4Cas-Dev (Firebase):** load from a terminal (it refuses the production project):
+**CMS4Cas-Dev (Firebase):** load from a terminal (it refuses the production project). The script uses the Admin SDK, which needs Google credentials for the dev project — `firebase login` alone is not enough:
 
 ```bash
+# Option A: your Google account (gcloud CLI)
 gcloud auth application-default login
+gcloud auth application-default set-quota-project cms4cas-dev   # without it, creating logins fails
+# Option B: a service-account key (Firebase console → Project settings → Service accounts), kept outside the repo
+#   add --service-account ~/keys/cms4cas-dev-admin.json to the commands below
+
 bash app/tool/seed_demo_data.sh                  # regenerates the data, writes Firestore, creates logins
 bash app/tool/seed_demo_data.sh --remove         # deletes demo documents and demo logins
 bash app/tool/seed_demo_data.sh --no-logins      # data only
@@ -162,6 +170,8 @@ cd ../../app && flutter test                                # 38 app tests (mode
 cd firebase/functions && npm install && npm test            # Functions load + Table 6.2 port (from app/)
 cd ../../.. && python3 kb/book_formulas.py                  # 45 book examples (independent Python check)
 ```
+
+Or all of them, plus analyzer and generated-code check, in one go: `bash app/tool/release_check.sh`.
 
 ## Firebase
 
@@ -261,39 +271,33 @@ Later deploys: `cd app/firebase && firebase deploy --only firestore:rules,functi
 
 ## Build and deploy
 
-### Web (Firebase Hosting)
+Full guide — environments, release workflow, signing, App Check, rollback and the first-release checklist: **[`app/docs/08_build_and_deploy.md`](app/docs/08_build_and_deploy.md)**.
 
 ```bash
-bash app/tool/deploy_web.sh dev                    # → https://cms4cas-dev.web.app   (CMS4Cas-Dev)
-APPCHECK_WEB_KEY=<recaptcha-v3-site-key> \
-bash app/tool/deploy_web.sh prod                   # → https://cms4cas.web.app       (CMS4Cas)
-bash app/tool/deploy_web.sh prod --preview qa      # temporary preview URL (7 days), live site untouched
-bash app/tool/deploy_web.sh prod --build-only      # just build app/build/web
+bash app/tool/release_check.sh                                  # gate: analyzer + all test suites (must be green)
+
+# Backend (when rules or Functions changed) — before the apps
+cd app/firebase && firebase deploy --only firestore:rules,functions --project dev   # then --project prod
+
+# Web
+bash app/tool/deploy_web.sh dev                                 # https://cms4cas-dev.web.app
+APPCHECK_WEB_KEY=<site key> bash app/tool/deploy_web.sh prod --preview rc   # check the preview URL, then:
+cd app/firebase && firebase hosting:clone cms4cas:rc cms4cas:live --project prod
+
+# Android (needs app/android/key.properties — see key.properties.example)
+cd app && flutter build appbundle --release --flavor prod --obfuscate --split-debug-info=build/symbols/android
+
+# iOS (macOS, Xcode team set)
+cd app && flutter build ipa --release --flavor prod --obfuscate --split-debug-info=build/symbols/ios
 ```
 
-The script refuses to build with placeholder Firebase config, builds the right flavor (`FLAVOR`, `CASINO_ID`, `USE_FIREBASE` for dev), self-hosts CanvasKit (`--no-web-resources-cdn`), copies the build into `app/firebase/hosting_public/` (the Firebase CLI only deploys from inside its own folder; git-ignored) and deploys Hosting to the matching project. Needs `firebase login`.
-
-What Hosting serves (`app/firebase/firebase.json`):
-- Clean URLs (`/players/…`, `/credit/…`) rewritten to `index.html`, so links are bookmarkable; signed-out visitors return to the page they asked for after signing in.
-- Pages and scripts are revalidated on every load (`no-cache`, cheap with ETags), so a new deploy reaches users immediately — Flutter's file names don't change between builds, so longer caching would serve stale code. Fonts, wasm and images cache for a day.
-- Security headers: `X-Frame-Options: DENY`, `nosniff`, strict referrer, no camera/mic/location; `X-Robots-Tag: noindex` (also in `index.html`) keeps this internal tool out of search engines. Source maps are not uploaded.
-
-Before the first prod deploy: register the web app in **App Check** with a reCAPTCHA v3 key and pass it as `APPCHECK_WEB_KEY` (otherwise App Check is off on web). Sign-in works on `*.web.app` / `*.firebaseapp.com` out of the box; for a custom domain, add it under Hosting and in **Authentication → Settings → Authorized domains**. Browsers need to reach Google services (`*.googleapis.com`, `www.gstatic.com` for the Firebase JS SDK) — allow them on locked-down casino networks.
-
-### Android / iOS
-
-```bash
-cd app
-flutter build appbundle --release --flavor prod --dart-define=CASINO_ID=main
-flutter build ipa --release --flavor prod --dart-define=CASINO_ID=main      # on macOS with Xcode
-```
-
-Application ids are in `app/flavorizr.yaml`, `app/android/app/flavorizr.gradle.kts` and the iOS build configurations (`store.cms4cas.app`, dev `store.cms4cas.app.dev`). Set up signing before store release.
+Bump `version: x.y.z+build` in `app/pubspec.yaml` before every store upload (the build number must always increase), tag the commit (`v1.2.0+7`), go to dev first, then prod.
 
 ## Known gaps
 
 - User-facing strings are English and not yet in ARB files (next step: Vietnamese).
-- Android/iOS flavor builds and the Firebase emulator have not been run in the build environment; the web build and all tests have.
+- Android/iOS flavor builds have not been compiled in the build environment, and Cloud Functions have not run in the Functions emulator; the web build, all tests, and the Auth/Firestore emulator checks (create-user, access-request rules, demo seeding) have.
+- The app uses the system font; a brand typeface is not bundled yet.
 - `package:flutter/material.dart` shows deprecation infos in Flutter 3.50 (`material_ui` migration pending).
 
 ## Jurisdiction

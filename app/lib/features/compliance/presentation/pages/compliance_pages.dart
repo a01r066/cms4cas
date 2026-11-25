@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/typedefs/typedefs.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../core/util/fmt.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/domain/entities/app_role.dart';
@@ -20,7 +21,7 @@ class CompliancePage extends StatelessWidget {
   Widget build(BuildContext context) => const DefaultTabController(
         length: 4,
         child: Scaffold(
-          appBar: TabBar(isScrollable: true, tabs: [Tab(text: 'Cash log (MTL)'), Tab(text: 'Aggregation & CTR'), Tab(text: 'Barred patrons'), Tab(text: 'SAR cases')]),
+          appBar: TabBar(isScrollable: true, tabAlignment: TabAlignment.start, tabs: [Tab(text: 'Cash log (MTL)'), Tab(text: 'Aggregation & CTR'), Tab(text: 'Barred patrons'), Tab(text: 'SAR cases')]),
           body: TabBarView(children: [_CashLog(), _Aggregation(), _Barred(), _Sar()]),
         ),
       );
@@ -142,7 +143,7 @@ class _CashLogState extends ConsumerState<_CashLog> {
             ),
           ]),
         ),
-      SectionCard(title: 'Multiple Transaction Log — today', subtitle: '${mtl.length} entries requiring MTL', children: [
+      SectionCard(title: 'Multiple transaction log, today', subtitle: mtl.length == 1 ? '1 entry at or above the MTL threshold' : '${mtl.length} entries at or above the MTL threshold', children: [
         if (todays.isEmpty) const Text('No cash transactions recorded this gaming day.'),
         if (todays.isNotEmpty)
           SimpleTable(columns: const ['Time', 'Patron', 'Type', 'Amount', 'Area', 'MTL', 'By'], rows: [
@@ -199,7 +200,7 @@ class _Aggregation extends ConsumerWidget {
       for (final a in aggs)
         Card(
           child: ListTile(
-            leading: Icon(a.reportable ? Icons.report : Icons.trending_up, color: a.reportable ? Colors.red.shade700 : Colors.orange.shade800),
+            leading: Icon(a.reportable ? Icons.report : Icons.trending_up, color: a.reportable ? Brand.danger : Brand.warning),
             title: Text('${labels[a.patronKey] ?? a.patronKey} — ${money0(a.total)}'),
             subtitle: Text('${date(a.gamingDay)} · ${a.direction == CashDirection.cashIn ? 'Cash in' : 'Cash out'} · ${a.label}'
                 '${a.multiple ? ' · multiple transactions' : ''}${a.reportable ? '' : ' · near threshold'}'),
@@ -299,7 +300,7 @@ class _Barred extends ConsumerWidget {
                   title: const Text('Bar patron'),
                   content: SizedBox(
                     width: 420,
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    child: Column(mainAxisSize: MainAxisSize.min, spacing: 16, children: [
                       DropdownButtonFormField<String?>(
                   isExpanded: true,
                         decoration: const InputDecoration(labelText: 'Known player'),
@@ -333,7 +334,7 @@ class _Barred extends ConsumerWidget {
       for (final b in list)
         Card(
           child: ListTile(
-            leading: Icon(Icons.block, color: b.active ? Colors.red.shade700 : Colors.grey),
+            leading: Icon(Icons.block, color: b.active ? Brand.danger : Colors.grey),
             title: Text(b.description),
             subtitle: Text('${b.reason} · since ${date(b.since)} · by ${b.addedBy}${b.active ? '' : ' · LIFTED'}'),
             trailing: b.active && user?.can(Perm.complianceReview) == true
@@ -372,7 +373,7 @@ class _Sar extends ConsumerWidget {
                   title: const Text('Open SAR case'),
                   content: SizedBox(
                     width: 440,
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    child: Column(mainAxisSize: MainAxisSize.min, spacing: 16, children: [
                       TextField(controller: subject, decoration: const InputDecoration(labelText: 'Subject')),
                       TextField(controller: amount, decoration: const InputDecoration(labelText: 'Amount involved', prefixText: '\$ '), keyboardType: TextInputType.number),
                       TextField(controller: summary, maxLines: 3, decoration: const InputDecoration(labelText: 'What was observed')),

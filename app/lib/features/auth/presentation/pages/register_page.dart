@@ -84,6 +84,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                               decoration: const InputDecoration(labelText: 'Full name'),
                               validator: (v) => (v ?? '').trim().length < 2 ? 'Enter your full name' : null,
                             ),
+                            const SizedBox(height: 16),
                             TextFormField(
                               controller: email,
                               keyboardType: TextInputType.emailAddress,
@@ -91,6 +92,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                               decoration: const InputDecoration(labelText: 'Work email'),
                               validator: (v) => (v ?? '').contains('@') ? null : 'Enter a valid email address',
                             ),
+                            const SizedBox(height: 16),
                             TextFormField(
                               controller: password,
                               obscureText: obscure,
@@ -108,6 +110,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   ? 'Use at least ${AuthNotifier.minPasswordLength} characters'
                                   : null,
                             ),
+                            const SizedBox(height: 16),
                             TextFormField(
                               controller: confirm,
                               obscureText: obscure,
@@ -116,7 +119,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                               validator: (v) => v != password.text ? 'The passwords do not match' : null,
                               onFieldSubmitted: (_) => _submit(),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             const Text(
                               'After you register, an administrator assigns your role. You can sign in now, '
                               'but you will not see casino data until then.',

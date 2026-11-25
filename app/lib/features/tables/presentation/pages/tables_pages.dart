@@ -1,6 +1,7 @@
 import 'package:casino_engine/casino_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../core/util/fmt.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/domain/entities/app_role.dart';
@@ -12,6 +13,7 @@ import '../../domain/entities/table_def.dart';
 import '../../domain/entities/table_shift.dart';
 import '../providers/tables_notifier.dart';
 import '../providers/tables_providers.dart';
+import '../widgets/hold_chart.dart';
 
 class TablesPage extends StatelessWidget {
   const TablesPage({super.key});
@@ -19,7 +21,7 @@ class TablesPage extends StatelessWidget {
   Widget build(BuildContext context) => const DefaultTabController(
         length: 3,
         child: Scaffold(
-          appBar: TabBar(isScrollable: true, tabs: [Tab(text: 'Hold dashboard'), Tab(text: 'Record shift'), Tab(text: 'Hold tools')]),
+          appBar: TabBar(isScrollable: true, tabAlignment: TabAlignment.start, tabs: [Tab(text: 'Hold dashboard'), Tab(text: 'Record shift'), Tab(text: 'Hold tools')]),
           body: TabBarView(children: [_HoldDashboard(), _RecordShift(), _HoldTools()]),
         ),
       );
@@ -42,9 +44,12 @@ class _HoldDashboardState extends ConsumerState<_HoldDashboard> {
     final hits = (ref.watch(hitsProvider).value ?? const <HitRecord>[]).where((h) => h.gamingDay.isAfter(cutoff)).toList();
     final settings = ref.watch(settingsProvider);
     final all = HoldSummary.of(shifts, hits);
+    final allShifts = ref.watch(shiftsProvider).value ?? const <TableShift>[];
+    final series = DailyHold.series(allShifts, {for (final t in tables) t.id: t.baseHold},
+        today: Aml.gamingDay(DateTime.now(), settings.aml.gamingDayStartHour));
     return PageBody(children: [
       Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-        Text('Table games — last $days days', style: Theme.of(context).textTheme.titleLarge),
+        Text(days == 1 ? 'Last gaming day' : days == 365 ? 'Last 12 months' : 'Last $days days', style: Theme.of(context).textTheme.titleLarge),
         SegmentedButton<int>(
           segments: const [ButtonSegment(value: 1, label: Text('1d')), ButtonSegment(value: 7, label: Text('7d')), ButtonSegment(value: 30, label: Text('30d')), ButtonSegment(value: 365, label: Text('1y'))],
           selected: {days},
@@ -54,12 +59,19 @@ class _HoldDashboardState extends ConsumerState<_HoldDashboard> {
       const SizedBox(height: 12),
       MetricGrid([
         Metric('Drop', money0(all.drop)),
-        Metric('Win', money0(all.win), color: all.win < 0 ? Colors.red.shade700 : null),
+        Metric('Win', money0(all.win), color: all.win < 0 ? Brand.danger : null),
         Metric('Hold (win ÷ drop)', pct(all.hold, 1)),
         Metric('Statistical hold', pct(all.statHold, 1), note: 'Incl. markers repaid in pit with cheques'),
-        Metric('Hold excl. documented hits', pct(all.adjustedHold, 1), note: '${hits.length} hit(s) removed'),
+        Metric('Hold excl. documented hits', pct(all.adjustedHold, 1), note: hits.length == 1 ? '1 documented hit removed' : '${hits.length} documented hits removed'),
       ]),
-      const SizedBox(height: 12),
+      const SizedBox(height: 16),
+      if (tables.isNotEmpty)
+        SectionCard(
+          title: 'Hold by gaming day',
+          subtitle: 'Last 14 gaming days, all tables · win ÷ drop against the drop-weighted base hold',
+          trailing: const BookRefChip(BookRef(10, '204–205', 'Statistical reports and ±3% rule'), inline: true),
+          children: [HoldChart(days: series, tolerance: settings.holdTolerance)],
+        ),
       Callout('Hold reflects count timing, credit policy, occupancy, cash play and promotions as much as staff performance — '
           'check the hold tools before drawing conclusions (Ch13). NV requires investigating moves beyond ±${pct(settings.holdTolerance, 0)} from the base hold.'),
       SectionCard(
@@ -81,7 +93,7 @@ class _HoldDashboardState extends ConsumerState<_HoldDashboard> {
                     return <Widget>[
                       Text(t.name), Text(settings.game(t.gameId).name), Text('$n'), Text(money0(s.drop)), Text(money0(s.win)),
                       Text(n == 0 ? '—' : pct(s.hold, 1)), Text(n == 0 ? '—' : pct(s.statHold, 1)), Text(t.baseHold == 0 ? '—' : pct(t.baseHold, 1)),
-                      flag ? Text('Investigate', style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.w600)) : const Text(''),
+                      flag ? const StatusText('Investigate', Tone.bad) : const Text(''),
                     ];
                   }()
               ],
@@ -125,7 +137,7 @@ Future<void> _editTable(BuildContext context, WidgetRef ref, [TableDef? t]) asyn
           child: Form(
             key: form,
             child: SingleChildScrollView(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
+              child: Column(mainAxisSize: MainAxisSize.min, spacing: 16, children: [
                 TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Table name / number *'), validator: (v) => (v ?? '').trim().isEmpty ? 'Required' : null),
                 DropdownButtonFormField<String>(
                   isExpanded: true,
@@ -265,7 +277,7 @@ class _RecordShiftState extends ConsumerState<_RecordShift> {
         MetricGrid([
           Metric('Drop', money0(r.drop), note: 'cash + cheques + markers issued − redeemed in pit'),
           Metric('Cheques missing', money0(r.chequesMissing), note: 'opener + fills − credits − closer'),
-          Metric('Win', money0(r.win), color: r.win < 0 ? Colors.red.shade700 : null),
+          Metric('Win', money0(r.win), color: r.win < 0 ? Brand.danger : null),
           Metric('Hold', pct(r.hold, 1)),
           Metric('Statistical drop', money0(r.statisticalDrop)),
           Metric('Statistical hold', pct(r.statisticalHold, 1)),

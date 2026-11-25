@@ -35,7 +35,7 @@ Future<void> showUserForm(BuildContext context, WidgetRef ref, {AppUser? existin
           width: 420,
           child: Form(
             key: form,
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
+            child: Column(mainAxisSize: MainAxisSize.min, spacing: 16, children: [
               TextFormField(
                 controller: name,
                 autofocus: true,

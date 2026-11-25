@@ -50,7 +50,7 @@ lib/
                                 # ProviderContainer → Crashlytics → eager providers → runApp
   firebase_options_dev.dart / firebase_options_prod.dart   # flutterfire configure per project
   app/
-    app.dart                    # MaterialApp.router
+    app.dart                    # MaterialApp.router; switches to the desktop theme at ≥ 1000 px
     session_cleanup.dart        # reacts to signed-in → signed-out
     local_backend.dart          # registry of local action handlers
   core/
@@ -59,8 +59,10 @@ lib/
     storage/    record_store.dart (port), local_record_store.dart, firestore_record_store.dart, prefs_service.dart
     backend/    functions_gateway.dart (Firebase callables | local handlers)
     session/    before_sign_out_hooks.dart
-    routing/    app_router.dart, route_names.dart, shell_scaffold.dart
-    theme/  widgets/  util/
+    routing/    app_router.dart, route_names.dart, shell_scaffold.dart (desktop sidebar | phone bottom bar + drawer)
+    theme/      theme.dart — Brand colours, AppPalette extension, Radii, buildTheme(brightness, desktop:)
+    widgets/    PageBody, SectionCard, Metric, HeroCard, QuickTile, LedgerTag, StatusText, SimpleTable, Callout …
+    util/
   shared/providers/  prefs_provider.dart, firebase_providers.dart, backend_providers.dart
   features/<feature>/
     data/datasources/   <feature>_remote_datasource.dart  (+ <feature>_local_actions.dart)
@@ -73,6 +75,8 @@ lib/
 ```
 
 Features with data: auth, settings, players, tables, credit, compliance. Calculator-only features (home, evaluate, staffing, library) have just `presentation/pages`, as the skill allows for small read-only features.
+
+`demo_data` has no domain entities of its own: `data/demo_data_generator.dart` (pure Dart, no Flutter) builds a deterministic set for every collection from the other features' entities and models and the engine formulas; a datasource writes or removes it through `RecordStore.putAll` / `deleteAll`; a notifier (admin only, local backend only) drives the Settings card. `tool/export_demo_data.dart` writes the same set as JSON for `firebase/functions/scripts/seed-demo-data.js`, which seeds the dev Firebase project and refuses production.
 
 **Rules applied in every feature**
 
@@ -116,6 +120,7 @@ Firebase options are Dart-side (`firebase_options_<flavor>.dart`). Service files
 
 ### Data flow and error handling
 
+- `RecordStore`: `watch`, `watchOne`, `list`, `get`, `put`, `putAll`, `patch`, `delete`, `deleteAll`. The bulk operations write once to shared_preferences locally and use batched writes (≤ 450 per batch) on Firestore.
 - `RecordStore.watch(collection)` → datasource maps to models → repository maps to entities and `Failure`s → `StreamProvider` → page. Every screen updates live, across devices on Firebase.
 - Corrupt local data surfaces as a readable error, not a blank screen (tested).
 

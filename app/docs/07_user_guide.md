@@ -1,6 +1,12 @@
 # 07 · User guide
 
-Conventions used everywhere: **positive results mean the casino won**; green **Book** chips open the source page reference; fields marked * are required.
+Conventions used everywhere: **positive results mean the casino won**; **Book** citations (green chips on phones, small tags on desktop) open the source page reference; fields marked * are required.
+
+## Finding your way around
+
+- **Desktop and web (wide windows):** the sidebar on the left groups the modules by department: *Floor* (Players & ratings, Table games & hold), *Cage & credit* (Credit & markers, Currency compliance), *Planning* (Promotions & deals, Staffing) and *Reference* (Knowledge library). Settings and your name are at the bottom; the arrow next to your name switches user or signs out. The tag at the top right shows the current gaming day.
+- **Phone:** the bar at the bottom holds Home, Players, Tables and Credit; **More** opens every other module. Tap your initials at the top right to switch user or sign out.
+- **Home** shows the gaming day, the day's key figures, the hold chart for the last 14 gaming days (desktop) and *Needs attention*: totals over the CTR threshold, SAR cases due within 7 days and credit applications awaiting signatures. Select an item to go straight to it.
 
 ## Getting started
 
@@ -8,6 +14,11 @@ Conventions used everywhere: **positive results mean the casino won**; green **B
 2. **Settings** → set the casino name and jurisdiction label. Check the AML thresholds, gaming-day start hour, tax rate and comp policy against your local regulation. *Reset to book defaults* restores the book's Nevada-2003 figures.
 3. **Settings → Users & roles** → add each person with a role, and a credit role for anyone who signs credit (see `03_architecture.md`).
 4. Each user signs in (cloud mode) or picks their name (local mode).
+
+### Trying the app with demo data
+
+- **Local mode:** sign in as an administrator → **Settings → Demo data → Load demo data**. You get staff for every role, 14 players with rated sessions, 10 tables with two weeks of shifts, credit applications, markers and compliance records. The demo staff appear on the sign-in screen, so you can see the app as a pit supervisor, cage cashier or compliance officer. **Remove demo data** deletes only demo records (ids starting `demo-`) and keeps your own profile.
+- **Firebase dev project:** an administrator runs `bash app/tool/seed_demo_data.sh` (see the README). Demo staff sign in as `demo.<role>@cms4cas.test` with the password chosen when seeding. The script refuses the production project.
 
 ## Registering and signing in (Firebase)
 
@@ -26,7 +37,7 @@ Conventions used everywhere: **positive results mean the casino won**; green **B
 
 - **Hold tools** → add your tables once (game, pit, limits, base hold %, marker or name-credit system).
 - **Record shift** at each close: opener, fills, credits, closer, currency and cheques in the drop box, markers issued and redeemed in the pit. Drop, win, hold and statistical drop are calculated and saved.
-- **Hold dashboard**: choose 1 d / 7 d / 30 d / 1 y. Tables outside base hold ± tolerance show **Investigate**.
+- **Hold dashboard**: choose 1 d / 7 d / 30 d / 1 y. The chart shows hold for each of the last 14 gaming days against the objective band (base hold ± tolerance); hover a day to see its drop, win and objective. One day's hold swings a lot, so judge staff on the period: in *By table*, tables outside base hold ± tolerance show **Investigate**.
 - Before blaming staff, work through **Hold tools → diagnostics checklist**, and record large documented player results under **Hits** so they can be removed from the adjusted hold.
 
 ## Credit and markers (Ch 6)

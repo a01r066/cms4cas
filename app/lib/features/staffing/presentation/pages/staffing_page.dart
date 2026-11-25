@@ -1,6 +1,7 @@
 import 'package:casino_engine/casino_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../core/util/fmt.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../settings/presentation/providers/settings_providers.dart';
@@ -11,11 +12,14 @@ const _shifts = ['Days', 'Swing', 'Grave'];
 class StaffingPage extends StatelessWidget {
   const StaffingPage({super.key});
   @override
-  Widget build(BuildContext context) => const DefaultTabController(
+  Widget build(BuildContext context) => DefaultTabController(
         length: 2,
         child: Scaffold(
-          appBar: TabBar(tabs: [Tab(text: 'Dealer & floor staffing'), Tab(text: 'Table opening economics')]),
-          body: TabBarView(children: [_Staffing(), _Opening()]),
+          appBar: TabBar(
+              isScrollable: isDesktop(context),
+              tabAlignment: isDesktop(context) ? TabAlignment.start : null,
+              tabs: const [Tab(text: 'Dealer & floor staffing'), Tab(text: 'Table opening economics')]),
+          body: const TabBarView(children: [_Staffing(), _Opening()]),
         ),
       );
 }
@@ -100,7 +104,7 @@ class _StaffingState extends ConsumerState<_Staffing> {
         MetricGrid([
           Metric('Dealer shifts per week', plan.weeklyShifts.toStringAsFixed(1)),
           Metric('Formula headcount', plan.formulaHeads.toStringAsFixed(2), note: 'shifts ÷ $dw days'),
-          Metric('Busiest day needs', plan.busiestDayHeads.toStringAsFixed(1), color: plan.busiestDayBinds ? Colors.orange.shade800 : null),
+          Metric('Busiest day needs', plan.busiestDayHeads.toStringAsFixed(1), color: plan.busiestDayBinds ? Brand.warning : null),
           Metric('Dealers on payroll', plan.payrollWithVacation.toStringAsFixed(2), note: 'incl. $vac weeks vacation'),
         ]),
         if (plan.busiestDayBinds)

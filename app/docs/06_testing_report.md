@@ -1,16 +1,16 @@
 # 06 · Testing report
 
-Run on 2026-11-24 with Flutter 3.50.1 / Dart 3.14, after restructuring the app to the `flutter-riverpod-firebase-architecture` conventions.
+Last run on 2026-11-25 with Flutter 3.50.1 / Dart 3.14, after adding demo data, the brand theme and the desktop web layout.
 
 | Suite | Command | Result |
 |---|---|---|
 | Book formula check (Python, independent implementation) | `python3 kb/book_formulas.py` | **45 / 45** book examples reproduced |
 | Engine golden & rule tests | `cd packages/casino_engine && dart test` | **65 / 65** pass |
-| App tests: models, domain, notifiers (through the privileged actions), registration, widgets | `cd app && flutter test` | **26 / 26** pass |
+| App tests: models, domain, notifiers (through the privileged actions), registration, demo data, widgets | `cd app && flutter test` | **38 / 38** pass |
 | Cloud Functions (Node.js 24, real SDKs loaded): all 8 callables are 2nd gen in asia-southeast1; JS port of Table 6.2; marker balance | `cd firebase/functions && npm test` | **6 / 6** pass |
 | Static analysis | `flutter analyze` | 0 errors, 0 warnings (infos only: `material.dart` deprecation in Flutter 3.50) |
 | Release web build | `flutter build web --release --no-web-resources-cdn` | builds |
-| Browser check | Playwright + Chrome on the release build, desktop 1440 px and phone 390 px | all 11 screens render; first-run admin creation and reload persistence verified |
+| Browser check | Playwright + Chrome on the release build with demo data, desktop 1440 px and phone 390 px, light and dark | all 11 screens render (screenshots in `docs/screenshots/`); first-run admin creation and reload persistence verified |
 
 The Python and Dart implementations were written separately; both reproduce the same book figures, which guards against a mistake being copied from one into the other.
 
@@ -20,6 +20,7 @@ The Python and Dart implementations were written separately; both reproduce the 
 |---|---|
 | `create-user.js`: admin with password, staff with reset link, registrant approved (request removed), role change keeps password and credit role, `--credit-role none`, hidden prompt (not echoed), bad role / credit role / short password / no terminal rejected | all as expected; created accounts sign in with the chosen password |
 | `access_requests` rules: own request with own email allowed; other uid, other email, extra `role` field refused; own `users` profile not writable; no data readable without a role | 7 / 7 as expected |
+| `seed-demo-data.js` via `tool/seed_demo_data.sh`: 548 documents and 9 logins written; a demo pit supervisor signs in, reads players and is refused a direct marker write by the rules; a 3-day-old file moves its dates forward; re-running replaces rather than duplicates; `--remove` leaves no demo documents or logins; `--project prod` and the production project id are refused | all as expected |
 
 ## Calculations verified against the book (engine tests)
 
@@ -43,7 +44,8 @@ The Python and Dart implementations were written separately; both reproduce the 
 | `domain_test.dart` | Available credit; time-weighted average bet (p.364); role permissions and least-privilege fallback; referred application needs a Credit Manager signature; CTR completeness |
 | `notifiers_test.dart` | `setUserRole`: first user must be admin, a non-admin cannot escalate. Credit end to end: assess → submit → sign (no double signing) → approve only when Table 6.2 is met → marker capped at available credit **even when the client sends a wrong figure** → payment → write-off refused without two authorized signers, then settled. CTR: fields required, reviewer ≠ preparer, filed. Hits below threshold rejected. SAR cases hidden from roles that may not read them |
 | `registration_test.dart` | Registration validation; local backend refuses registration with a clear message; only admins see requests; approving creates the profile and removes the request; dismissing; full flow against a Firebase-shaped fake: forgot password, mismatched passwords rejected, waiting screen, self-promotion refused once an admin exists, approval opens the app without signing in again |
-| `widget_test.dart` | First run → every module opens; phone width without overflow; corrupted data shows an error; deep link while signed out returns there after sign-in; tabs keep their own stack; rating a session through the form saves theo $766.50 |
+| `demo_data_test.dart` | The generated set covers all 13 collections with `demo-` ids, is deterministic, and every record parses through its model; it contains the book's roulette rating (theo $1,065.15, p.221); every table shift passes validation and BJ-04 holds below objective; approved credit lines meet Table 6.2 while pending and referred ones do not; open markers fall in every aging bucket and the settled write-off has two authorized signers; cash transactions produce the reportable aggregates behind the CTRs. Loading and removing through the notifier (admin only, local backend only) keeps the signed-in admin; the Settings card loads the data |
+| `widget_test.dart` | First run → every module opens; phone width without overflow; corrupted data shows an error; deep link while signed out returns there after sign-in; tabs keep their own stack (desktop sidebar); rating a session through the form saves theo $766.50 |
 
 ## Differences from the printed book (errata)
 
@@ -61,6 +63,7 @@ The full list (six items) is in the Phase 1–3 document. None changes a busines
 - **Jurisdiction figures are the book's (Nevada, 2003).** Thresholds are editable in Settings; the operator must confirm them against current local regulation (for Vietnam, the applicable decree and State Bank reporting rules).
 - **Decisions per hour** for some games (pai gow, pai gow poker, Caribbean stud) are app defaults where the book gives no timing; they are labelled in the UI and editable.
 - **Not covered in v1:** slot floor analytics, drop & count with key control, audit scheduler, sports/race operations UI (engine functions exist and are tested), localisation, PDF/CSV export.
-- **Fonts on web** fall back to Google Fonts for some symbols; offline deployments should bundle a font (no functional impact).
-- **Firestore rules and Cloud Functions** were not run against the Firebase emulator in this environment (the local backend runs the same checks in Dart and is tested; the JS signature port is unit-tested). Run `firebase emulators:start` before going live.
+- **Fonts on web** fall back to Google Fonts for some symbols; offline deployments should bundle a font (no functional impact). The app uses the system font; a brand typeface is not bundled yet.
+- **Cloud Functions** were not exercised in the Functions emulator here (the Dart twins of every callable are tested through the notifiers, and the JS signature port is unit-tested). Auth and the Firestore rules were checked in the emulators (above). Run `firebase emulators:start` with functions before going live.
+- **The desktop layout's dialogs** were checked by reading the code and the widget tests, not by a rendered screenshot.
 - **Android/iOS flavor builds** were not compiled here (no Android SDK / Xcode); the web build was.

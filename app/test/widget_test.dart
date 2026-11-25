@@ -103,6 +103,8 @@ void main() {
     await tester.enterText(find.widgetWithText(TextFormField, 'Time played'), '120');
     await tester.pumpAndSettle();
     expect(find.text('\$766.50'), findsOneWidget); // 500 × 2h × 105 hands (3 players) × 0.73%
+    await tester.ensureVisible(find.text('Save rating'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Save rating'));
     await tester.pumpAndSettle();
     final saved = await c.read(recordStoreProvider).list('ratings');

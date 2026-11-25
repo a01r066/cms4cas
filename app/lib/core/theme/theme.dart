@@ -13,9 +13,18 @@ abstract final class Brand {
   static const ink = Color(0xFF14231B); // body text
   static const muted = Color(0xFF6B7C72);
   static const line = Color(0xFFE3EAE5);
-  static const danger = Color(0xFFD64545);
-  static const warning = Color(0xFFE0922F);
+  static const danger = Color(0xFFB4473F); // toned to sit inside the palette
+  static const warning = Color(0xFFA8661C);
+  static const good = Color(0xFF2E7A50);
 }
+
+/// Wide layouts (web/desktop) use the quieter desktop theme and the sidebar shell.
+const desktopBreakpoint = 1000.0;
+bool isDesktop(BuildContext context) => MediaQuery.sizeOf(context).width >= desktopBreakpoint;
+
+/// Mono face for figures, citations and meta on desktop.
+const monoFamily = 'monospace';
+const monoFallback = ['Roboto Mono', 'Menlo', 'Consolas', 'monospace'];
 
 /// Extra brand tokens for widgets that need more than the ColorScheme.
 @immutable
@@ -90,13 +99,18 @@ class AppPalette extends ThemeExtension<AppPalette> {
 }
 
 abstract final class Radii {
+  static const control = 10.0;
   static const card = 20.0;
+  static const cardDesktop = 16.0;
   static const tile = 16.0;
   static const field = 14.0;
   static const pill = 100.0;
 }
 
-ThemeData buildTheme(Brightness b) {
+/// [desktop]: quieter variant for wide screens. Weights 400–600, tabular figures,
+/// 10 px controls and 16 px cards, forest green as the only chrome accent
+/// (lime is kept for the selection marker and the chart).
+ThemeData buildTheme(Brightness b, {bool desktop = false}) {
   final dark = b == Brightness.dark;
   final base = ColorScheme.fromSeed(seedColor: Brand.forest, brightness: b);
   final scheme = dark
@@ -146,7 +160,23 @@ ThemeData buildTheme(Brightness b) {
 
   final baseText = (dark ? Typography.material2021().white : Typography.material2021().black)
       .apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
-  final text = baseText.copyWith(
+  const tab = [FontFeature.tabularFigures()];
+  final text = desktop
+      ? baseText.copyWith(
+            headlineLarge: baseText.headlineLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.4, fontFeatures: tab),
+            headlineMedium: baseText.headlineMedium?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.3, fontFeatures: tab),
+            headlineSmall: baseText.headlineSmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.2, fontFeatures: tab),
+            titleLarge: baseText.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w600, fontFeatures: tab),
+            titleMedium: baseText.titleMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w600, fontFeatures: tab),
+            titleSmall: baseText.titleSmall?.copyWith(fontWeight: FontWeight.w500, fontFeatures: tab),
+            bodyLarge: baseText.bodyLarge?.copyWith(fontSize: 15, fontFeatures: tab),
+            bodyMedium: baseText.bodyMedium?.copyWith(fontSize: 14, fontFeatures: tab),
+            bodySmall: baseText.bodySmall?.copyWith(fontSize: 12.5, color: scheme.onSurfaceVariant, fontFeatures: tab),
+            labelLarge: baseText.labelLarge?.copyWith(fontWeight: FontWeight.w500, fontFeatures: tab),
+            labelMedium: baseText.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontFeatures: tab),
+            labelSmall: baseText.labelSmall?.copyWith(fontFeatures: tab),
+          )
+      : baseText.copyWith(
     headlineLarge: baseText.headlineLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5),
     headlineMedium: baseText.headlineMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5),
     headlineSmall: baseText.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.3),
@@ -157,14 +187,15 @@ ThemeData buildTheme(Brightness b) {
     labelMedium: baseText.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
     bodySmall: baseText.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
   );
+  final accentInk = dark ? Brand.lime : Brand.forest;
 
-  const pill = StadiumBorder();
+  final OutlinedBorder pill = desktop ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.control)) : const StadiumBorder();
   // Not Size.fromHeight: an infinite min width breaks buttons inside Rows/Wraps.
-  const buttonSize = Size(64, 46);
-  const buttonPadding = EdgeInsets.symmetric(horizontal: 22, vertical: 12);
-  final buttonText = text.labelLarge?.copyWith(fontSize: 14, fontWeight: FontWeight.w600);
+  final buttonSize = desktop ? const Size(64, 40) : const Size(64, 46);
+  final buttonPadding = desktop ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10) : const EdgeInsets.symmetric(horizontal: 22, vertical: 12);
+  final buttonText = text.labelLarge?.copyWith(fontSize: 14, fontWeight: desktop ? FontWeight.w500 : FontWeight.w600);
   OutlineInputBorder field(Color c, [double w = 1]) =>
-      OutlineInputBorder(borderRadius: BorderRadius.circular(Radii.field), borderSide: BorderSide(color: c, width: w));
+      OutlineInputBorder(borderRadius: BorderRadius.circular(desktop ? Radii.control : Radii.field), borderSide: BorderSide(color: c, width: w));
 
   return ThemeData(
     useMaterial3: true,
@@ -184,7 +215,8 @@ ThemeData buildTheme(Brightness b) {
       elevation: 0,
       scrolledUnderElevation: 0.5,
       centerTitle: false,
-      titleTextStyle: text.titleLarge?.copyWith(fontSize: 22, fontWeight: FontWeight.w800),
+      titleTextStyle: desktop ? text.titleLarge : text.titleLarge?.copyWith(fontSize: 22, fontWeight: FontWeight.w800),
+      toolbarHeight: desktop ? 64 : null,
     ),
     cardTheme: CardThemeData(
       elevation: 0,
@@ -192,7 +224,7 @@ ThemeData buildTheme(Brightness b) {
       surfaceTintColor: Colors.transparent,
       shadowColor: Colors.black.withValues(alpha: 0.06),
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.card), side: BorderSide(color: scheme.outlineVariant)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(desktop ? Radii.cardDesktop : Radii.card), side: BorderSide(color: scheme.outlineVariant)),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -203,13 +235,13 @@ ThemeData buildTheme(Brightness b) {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         shape: pill, minimumSize: buttonSize, padding: buttonPadding, textStyle: buttonText, elevation: 0,
-        backgroundColor: Brand.lime, foregroundColor: Brand.forestDark,
+        backgroundColor: desktop ? palette.tile : Brand.lime, foregroundColor: desktop ? palette.onTile : Brand.forestDark,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         shape: pill, minimumSize: buttonSize, padding: buttonPadding, textStyle: buttonText,
-        foregroundColor: dark ? Colors.white : Brand.forest, side: BorderSide(color: scheme.outline),
+        foregroundColor: dark ? Colors.white : Brand.forest, side: BorderSide(color: desktop ? scheme.outlineVariant : scheme.outline),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -217,14 +249,17 @@ ThemeData buildTheme(Brightness b) {
     ),
     iconButtonTheme: IconButtonThemeData(style: IconButton.styleFrom(foregroundColor: scheme.onSurface)),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: Brand.lime, foregroundColor: Brand.forestDark, elevation: 2, shape: const StadiumBorder(),
+      backgroundColor: desktop ? (dark ? Brand.lime : Brand.forest) : Brand.lime,
+      foregroundColor: desktop ? (dark ? Brand.forestDark : Colors.white) : Brand.forestDark,
+      elevation: desktop ? 1 : 2,
+      shape: desktop ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.control + 2)) : const StadiumBorder(),
       extendedTextStyle: buttonText,
     ),
     inputDecorationTheme: InputDecorationTheme(
       isDense: true,
       filled: true,
       fillColor: dark ? scheme.surfaceContainer : Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: desktop ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12) : const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: field(scheme.outlineVariant),
       enabledBorder: field(scheme.outlineVariant),
       disabledBorder: field(scheme.outlineVariant.withValues(alpha: 0.5)),
@@ -235,24 +270,33 @@ ThemeData buildTheme(Brightness b) {
       floatingLabelStyle: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600),
     ),
     chipTheme: ChipThemeData(
-      shape: const StadiumBorder(),
-      side: BorderSide.none,
-      backgroundColor: palette.tile,
-      selectedColor: dark ? Brand.lime : Brand.forest,
+      shape: desktop ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)) : const StadiumBorder(),
+      side: desktop ? BorderSide(color: scheme.outlineVariant) : BorderSide.none,
+      backgroundColor: desktop ? Colors.transparent : palette.tile,
+      selectedColor: desktop ? palette.tile : (dark ? Brand.lime : Brand.forest),
       secondarySelectedColor: Brand.lime,
-      checkmarkColor: dark ? Brand.forestDark : Colors.white,
+      checkmarkColor: desktop ? accentInk : (dark ? Brand.forestDark : Colors.white),
       labelStyle: text.labelLarge?.copyWith(color: palette.onTile),
       secondaryLabelStyle: text.labelLarge?.copyWith(color: dark ? Brand.forestDark : Colors.white),
       iconTheme: IconThemeData(color: palette.onTile, size: 18),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     ),
     segmentedButtonTheme: SegmentedButtonThemeData(
-      style: ButtonStyle(
-        shape: const WidgetStatePropertyAll(StadiumBorder()),
-        backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? (dark ? Brand.lime : Brand.forest) : null),
-        foregroundColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected) ? (dark ? Brand.forestDark : Colors.white) : scheme.onSurface),
-      ),
+      style: desktop
+          ? ButtonStyle(
+              shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.control))),
+              side: WidgetStatePropertyAll(BorderSide(color: scheme.outlineVariant)),
+              visualDensity: VisualDensity.compact,
+              backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? palette.tile : null),
+              foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? accentInk : scheme.onSurfaceVariant),
+              textStyle: WidgetStatePropertyAll(text.labelLarge),
+            )
+          : ButtonStyle(
+              shape: const WidgetStatePropertyAll(StadiumBorder()),
+              backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? (dark ? Brand.lime : Brand.forest) : null),
+              foregroundColor: WidgetStateProperty.resolveWith(
+                  (s) => s.contains(WidgetState.selected) ? (dark ? Brand.forestDark : Colors.white) : scheme.onSurface),
+            ),
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Colors.white : null),
@@ -278,13 +322,14 @@ ThemeData buildTheme(Brightness b) {
       labelColor: dark ? Brand.lime : Brand.forest,
       unselectedLabelColor: scheme.onSurfaceVariant,
       indicatorColor: dark ? Brand.lime : Brand.forest,
-      labelStyle: text.labelLarge,
+      labelStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      unselectedLabelStyle: text.labelLarge,
       dividerColor: scheme.outlineVariant,
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: dark ? scheme.surfaceContainerLow : Colors.white,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(desktop ? 16 : 24)),
       titleTextStyle: text.titleLarge,
     ),
     bottomSheetTheme: BottomSheetThemeData(
@@ -295,7 +340,7 @@ ThemeData buildTheme(Brightness b) {
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: Brand.forestDark,
+      backgroundColor: desktop ? Brand.ink : Brand.forestDark,
       contentTextStyle: const TextStyle(color: Colors.white),
       actionTextColor: Brand.lime,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.field)),

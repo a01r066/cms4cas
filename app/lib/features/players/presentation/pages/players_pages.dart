@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/route_names.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../core/util/fmt.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/domain/entities/app_role.dart';
@@ -95,7 +96,7 @@ Future<Player?> showPlayerForm(BuildContext context, WidgetRef ref, {Player? exi
         child: Form(
           key: form,
           child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
+            child: Column(mainAxisSize: MainAxisSize.min, spacing: 16, children: [
               TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Full name *'),
                   validator: (v) => (v ?? '').trim().length < 2 ? 'Enter the player\'s name' : null),
               TextFormField(controller: no, decoration: const InputDecoration(labelText: 'Player / club number')),
@@ -172,7 +173,7 @@ class PlayerDetailPage extends ConsumerWidget {
           children: [
             MetricGrid([
               Metric('Theoretical win', money0(s.theo)),
-              Metric('Actual result (casino)', money0(s.actualCasinoWin), color: s.actualCasinoWin < 0 ? Colors.red.shade700 : null),
+              Metric('Actual result (casino)', money0(s.actualCasinoWin), color: s.actualCasinoWin < 0 ? Brand.danger : null),
               Metric('Weighted avg bet', money0(s.weightedAvgBet), note: 'Time-weighted (Ch19 p.364)'),
               Metric('Hours rated', numf(s.hours)),
               Metric('Comp allowance', money0(comp.allowance), note: comp.basis),

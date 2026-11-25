@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/typedefs/typedefs.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../core/util/fmt.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/domain/entities/app_role.dart';
@@ -24,7 +25,10 @@ class CreditPage extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: const TabBar(tabs: [Tab(text: 'Applications'), Tab(text: 'Markers & collections')]),
+        appBar: TabBar(
+            isScrollable: isDesktop(context),
+            tabAlignment: isDesktop(context) ? TabAlignment.start : null,
+            tabs: const [Tab(text: 'Applications'), Tab(text: 'Markers & collections')]),
         body: const TabBarView(children: [_ApplicationsTab(), _MarkersTab()]),
       ),
     );
@@ -88,7 +92,7 @@ class _ApplicationsTab extends ConsumerWidget {
             width: 460,
             child: Form(
               key: form,
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
+              child: Column(mainAxisSize: MainAxisSize.min, spacing: 16, children: [
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Player *'),
@@ -148,13 +152,13 @@ class _StatusChip extends StatelessWidget {
   const _StatusChip(this.s);
   @override
   Widget build(BuildContext context) {
-    final c = switch (s) {
-      CreditStatus.approved => Colors.green.shade700,
-      CreditStatus.declined => Colors.red.shade700,
-      CreditStatus.pendingApproval => Colors.orange.shade800,
-      CreditStatus.draft => Colors.grey.shade700,
+    final tone = switch (s) {
+      CreditStatus.approved => Tone.good,
+      CreditStatus.declined => Tone.bad,
+      CreditStatus.pendingApproval => Tone.warn,
+      CreditStatus.draft => Tone.neutral,
     };
-    return Text(s.label, style: TextStyle(color: c, fontWeight: FontWeight.w600));
+    return StatusText(s.label, tone);
   }
 }
 
@@ -376,7 +380,7 @@ class _MarkersTab extends ConsumerWidget {
         Metric('0–30 days', money0(aging[0])),
         Metric('31–60 days', money0(aging[1])),
         Metric('61–90 days', money0(aging[2])),
-        Metric('Over 90 days', money0(aging[3]), color: aging[3] > 0 ? Colors.red.shade700 : null),
+        Metric('Over 90 days', money0(aging[3]), color: aging[3] > 0 ? Brand.danger : null),
       ]),
       const SizedBox(height: 8),
       const Callout('Collections: send a statement within one week of departure unless "no statement" was requested; phone when the disposition date passes; outside agencies charge 25–50% (p.104).'),
@@ -423,7 +427,7 @@ class _MarkersTab extends ConsumerWidget {
             width: 440,
             child: Form(
               key: form,
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
+              child: Column(mainAxisSize: MainAxisSize.min, spacing: 16, children: [
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Player *'),
@@ -432,10 +436,7 @@ class _MarkersTab extends ConsumerWidget {
                   validator: (x) => x == null ? 'Choose a player' : null,
                 ),
                 if (av != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text('Line ${money0(av.line)} · outstanding ${money0(av.outstanding)} · available ${money0(av.available)}'),
-                  ),
+                  Text('Line ${money0(av.line)} · outstanding ${money0(av.outstanding)} · available ${money0(av.available)}'),
                 TextFormField(controller: number, decoration: const InputDecoration(labelText: 'Marker number *'),
                     validator: (x) => (x ?? '').trim().isEmpty ? 'Required' : null),
                 TextFormField(controller: table, decoration: const InputDecoration(labelText: 'Table / pit *'),

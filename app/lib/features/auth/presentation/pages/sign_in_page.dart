@@ -96,7 +96,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     if (waiting) return _waitingForRole(state.busy);
     return [
       AutofillGroup(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, spacing: 16, children: [
           TextField(
             controller: email,
             keyboardType: TextInputType.emailAddress,
@@ -112,10 +112,12 @@ class _SignInPageState extends ConsumerState<SignInPage> {
           ),
         ]),
       ),
+      const SizedBox(height: 4),
       Align(
         alignment: Alignment.centerRight,
         child: TextButton(onPressed: state.busy ? null : _forgotPassword, child: const Text('Forgot password?')),
       ),
+      const SizedBox(height: 8),
       if (state.failure != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Callout.bad(state.failure!.displayMessage)),
       FilledButton(onPressed: state.busy ? null : _signIn, child: const Text('Sign in')),
       const SizedBox(height: 8),

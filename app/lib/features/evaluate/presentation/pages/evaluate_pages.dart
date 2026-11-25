@@ -1,6 +1,7 @@
 import 'package:casino_engine/casino_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../core/util/fmt.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../settings/presentation/providers/settings_providers.dart';
@@ -12,7 +13,7 @@ class EvaluatePage extends StatelessWidget {
   Widget build(BuildContext context) => const DefaultTabController(
         length: 6,
         child: Scaffold(
-          appBar: TabBar(isScrollable: true, tabs: [
+          appBar: TabBar(isScrollable: true, tabAlignment: TabAlignment.start, tabs: [
             Tab(text: 'Match play'), Tab(text: 'Package program'), Tab(text: 'Rebate on loss'), Tab(text: 'Premium deal'), Tab(text: 'Dead chips'), Tab(text: 'Comp schedule'),
           ]),
           body: TabBarView(children: [_MatchPlay(), _Program(), _Rebate(), _Premium(), _DeadChips(), _CompSchedule()]),
@@ -113,7 +114,7 @@ class _ProgramState extends _CalcState<_Program> {
       ]),
       SectionCard(title: 'Answers', children: [
         MetricGrid([
-          Metric('1 · Result at minimum play', money(min.net), color: min.net < 0 ? Colors.red.shade700 : Colors.green.shade700),
+          Metric('1 · Result at minimum play', money(min.net), color: min.net < 0 ? Brand.danger : Brand.good),
           Metric('2 · Break-even average bet', breakEvenBet == null ? '> \$5,000' : money0(breakEvenBet), note: 'at ${numf(v('hours'))} hours'),
           Metric('Casino win at minimum', money(v('hours') * v('bet') * v('bwh'))),
           Metric('Gaming tax', money(min.tax)),
@@ -156,7 +157,7 @@ class _RebateState extends _CalcState<_Rebate> {
       SectionCard(title: 'Effect', children: [
         MetricGrid([
           Metric('House advantage without rebate', pct(base, 3)),
-          Metric('Effective advantage with rebate', pct(eff, 3), color: eff < 0 ? Colors.red.shade700 : null, note: eff < 0 ? 'Player has the edge' : null),
+          Metric('Effective advantage with rebate', pct(eff, 3), color: eff < 0 ? Brand.danger : null, note: eff < 0 ? 'Player has the edge' : null),
           Metric('Theo given up', pct(1 - eff / base, 1)),
           Metric('Equivalent bet without rebate', money0(equiv)),
           Metric('MacDonald quick estimate', '${pct(macd, 1)} of theo', note: 'approximation, level betting'),
@@ -217,7 +218,7 @@ class _PremiumState extends _CalcState<_Premium> {
             Metric('Theoretical win', money0(r.theo)),
             Metric('RFB cost', money0(r.rfbCost)),
             Metric('Gaming tax', money0(r.tax)),
-            Metric('Contribution', money0(r.contribution), color: r.contribution < 0 ? Colors.red.shade700 : Colors.green.shade700),
+            Metric('Contribution', money0(r.contribution), color: r.contribution < 0 ? Brand.danger : Brand.good),
             Metric('Chance the casino loses the trip', pct(r.probabilityCasinoLoses, 1)),
           ]),
           const SizedBox(height: 8),
@@ -259,7 +260,7 @@ class _DeadChipsState extends _CalcState<_DeadChips> {
           Metric('Wagers to wash the chips', money0(wash.wagers)),
           Metric('Time to wash', '${wash.hours.toStringAsFixed(1)} h'),
           Metric('Casino result after bonus', money0(net.casinoWin)),
-          Metric('After gaming tax', money0(net.net), color: net.net < 0 ? Colors.red.shade700 : null),
+          Metric('After gaming tax', money0(net.net), color: net.net < 0 ? Brand.danger : null),
           Metric('Bonus that halves the edge', pct(half, 2)),
         ]),
         const SizedBox(height: 8),
